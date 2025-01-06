@@ -177,7 +177,9 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final Uint8List rnd = Uint8List.fromList(List.generate(seedLength, (int _) => 0, growable: false));
+    final Uint8List rnd = Uint8List.fromList(
+      List.generate(seedLength, (int _) => 0, growable: false),
+    );
 
     final List<int> mPrime = List.empty(growable: true);
     mPrime.addAll(integerToBytes(0, 1));
@@ -189,7 +191,11 @@ class MLDSA {
   }
 
   bool verify(
-      Uint8List pk, Uint8List message, Uint8List signature, Uint8List ctx) {
+    Uint8List pk,
+    Uint8List message,
+    Uint8List signature,
+    Uint8List ctx,
+  ) {
     if (ctx.length > 255) {
       throw Exception('ctx length > 255');
     }
@@ -217,36 +223,21 @@ class MLDSA {
     final Uint8List kappa = bytes.sublist(96);
 
     final List<List<List<int>>> AHat = expandA(parameters, rho);
-    final (List<List<int>> s1, List<List<int>> s2) =
-        expandS(parameters, rhoPrime);
+    final (List<List<int>> s1, List<List<int>> s2) = expandS(
+      parameters,
+      rhoPrime,
+    );
     final List<List<int>> s1Hat = vectorNtt(parameters, s1);
-
     final List<List<int>> product = matrixVectorNtt(parameters, AHat, s1Hat);
-
-    final List<List<int>> t = List.generate(parameters.k(), (int j) {
-      return addPolynomials(
-          parameters, nttInverse(parameters, product[j]), s2[j]);
-    }, growable: false);
-
-    List<List<int>> t0 = List.generate(
-      parameters.k(),
-      (int _) => List.generate(256, (int _) => 0, growable: false),
-      growable: false,
+    final List<List<int>> t = vectorAddPolynomials(
+      parameters,
+      vectorNttInverse(parameters, product),
+      s2,
     );
-    List<List<int>> t1 = List.generate(
-      parameters.k(),
-      (int _) => List.generate(256, (int _) => 0, growable: false),
-      growable: false,
+    final (List<List<int>> t1, List<List<int>> t0) = vectorPower2Round(
+      parameters,
+      t,
     );
-
-    int x, y;
-    for (int j = 0; j < parameters.k(); j++) {
-      for (int i = 0; i < 256; i++) {
-        (x, y) = power2Round(parameters, t[j][i]);
-        t1[j][i] = x;
-        t0[j][i] = y;
-      }
-    }
 
     final Uint8List pk = pkEncode(parameters, rho, t1);
 
@@ -304,16 +295,8 @@ class MLDSA {
 
       final List<List<int>> yHat = vectorNtt(parameters, y);
       final List<List<int>> product = matrixVectorNtt(parameters, AHat, yHat);
-
-      final List<List<int>> w = List.generate(parameters.k(), (int j) {
-        return nttInverse(parameters, product[j]);
-      }, growable: false);
-
-      final List<List<int>> w1 = List.generate(parameters.k(), (int j) {
-        return List.generate(256, (int i) {
-          return highBits(parameters, w[j][i]);
-        }, growable: false);
-      }, growable: false);
+      final List<List<int>> w = vectorNttInverse(parameters, product);
+      final List<List<int>> w1 = vectorHighBits(parameters, w);
 
       inputHash = List.generate(64, (int i) => mu[i]);
       inputHash.addAll(w1Encode(parameters, w1));
@@ -326,30 +309,23 @@ class MLDSA {
       final List<int> cHat = ntt(parameters, c);
 
       final List<List<int>> cs1 = vectorNttInverse(
-          parameters, scalarVectorNtt(parameters, cHat, s1Hat));
+        parameters,
+        scalarVectorNtt(parameters, cHat, s1Hat),
+      );
       final List<List<int>> cs2 = vectorNttInverse(
-          parameters, scalarVectorNtt(parameters, cHat, s2Hat));
-
-      for (int i = 0; i < cs1.length; i++) {
-        for (int j = 0; j < cs1[i].length; j++) {
-          cs1[i][j] = modQSymmetric(cs1[i][j], parameters.q());
-        }
-      }
+        parameters,
+        scalarVectorNtt(parameters, cHat, s2Hat),
+      );
 
       z = vectorAddPolynomials(parameters, y, cs1);
       final List<List<int>> r = vectorSubtractPolynomials(parameters, w, cs2);
 
-      final int r0Max =
-          r.expand((polynomial) => polynomial).reduce((int a, int b) {
-        final int x = lowBits(parameters, a);
-        final int y = lowBits(parameters, b);
-
-        return x.abs() > y.abs() ? x.abs() : y.abs();
-      });
-
-      final int zMax =
-          z.expand((polynomial) => polynomial).reduce((int a, int b) => a.abs() > b.abs() ? a.abs() : b.abs());
-
+      final int r0Max = vectorMaxAbsCoefficient(
+        parameters,
+        r,
+        lowBitsOnly: true,
+      );
+      final int zMax = vectorMaxAbsCoefficient(parameters, z);
       if (zMax >= parameters.gamma1() - parameters.beta() ||
           r0Max >= parameters.gamma2() - parameters.beta()) {
         z = null;
@@ -359,22 +335,12 @@ class MLDSA {
             parameters, scalarVectorNtt(parameters, cHat, t0Hat));
         final List<List<int>> ct0Neg =
             scalarVectorMultiply(parameters, -1, ct0);
-
         final List<List<int>> wPrime = vectorAddPolynomials(
             parameters, vectorSubtractPolynomials(parameters, w, cs2), ct0);
 
-        h = List.generate(ct0Neg.length, (int i) {
-          return List.generate(ct0Neg[0].length, (int j) {
-            return makeHint(parameters, ct0Neg[i][j], wPrime[i][j]);
-          }, growable: false);
-        }, growable: false);
-
-        final int ct0Max =
-            ct0.expand((row) => row).reduce((int a, int b) => a.abs() > b.abs() ? a.abs() : b.abs());
-        final int onesInH =
-            h.expand((row) => row).reduce((int a, int b) => a + b);
-
-        if (ct0Max >= parameters.gamma2() || onesInH > parameters.omega()) {
+        h = vectorMakeHint(parameters, ct0Neg, wPrime);
+        final int ct0Max = vectorMaxAbsCoefficient(parameters, ct0);
+        if (ct0Max >= parameters.gamma2() || onesInH(h) > parameters.omega()) {
           z = null;
           h = null;
         }
@@ -383,12 +349,8 @@ class MLDSA {
       k += parameters.l();
     }
 
-    final List<List<int>> zModQSymmetric = List.generate(z!.length, (int i) {
-      return List.generate(z![i].length, (int j) {
-        return modQSymmetric(z![i][j], parameters.q());
-      });
-    });
-
+    final List<List<int>> zModQSymmetric =
+        vectorModQSymmetric(z!, parameters.q());
     final Uint8List sigma = sigEncode(parameters, cTilde, zModQSymmetric, h!);
 
     return sigma;
@@ -396,36 +358,46 @@ class MLDSA {
 
   bool _verify(Uint8List pk, Uint8List mPrime, Uint8List sigma) {
     final (Uint8List rho, List<List<int>> t1) = pkDecode(parameters, pk);
-    final (Uint8List cTilde, List<List<int>> z, List<List<int>>? h) = sigDecode(parameters, sigma);
+    final (Uint8List cTilde, List<List<int>> z, List<List<int>>? h) =
+        sigDecode(parameters, sigma);
 
     if (h == null) {
       return false;
     }
 
     final List<List<List<int>>> AHat = expandA(parameters, rho);
-	
+
     IncrementalSHAKE hasher = IncrementalSHAKE(true);
     hasher.absorb(pk);
     final Uint8List tr = hasher.squeeze(64);
 
-	  List <int> inputHash = List.generate(64, (int i) => tr[i]);
+    List<int> inputHash = List.generate(64, (int i) => tr[i]);
     inputHash.addAll(mPrime);
 
     hasher = IncrementalSHAKE(true);
     hasher.absorb(Uint8List.fromList(inputHash));
     final Uint8List mu = hasher.squeeze(64);
 
-	  final List<int> c = sampleInBall(parameters, cTilde);
-	  final List<int> cHat = ntt(parameters, c);
+    final List<int> c = sampleInBall(parameters, cTilde);
+    final List<int> cHat = ntt(parameters, c);
 
-    final List<List<int>> ct = scalarVectorNtt(parameters, cHat, vectorNtt(parameters, scalarVectorMultiply(parameters, 1 << parameters.d(), t1)));
-    final List<List<int>> Az = matrixVectorNtt(parameters, AHat, vectorNtt(parameters, z));
+    final List<List<int>> ct = scalarVectorNtt(
+      parameters,
+      cHat,
+      vectorNtt(
+        parameters,
+        scalarVectorMultiply(parameters, 1 << parameters.d(), t1),
+      ),
+    );
+    final List<List<int>> Az = matrixVectorNtt(
+      parameters,
+      AHat,
+      vectorNtt(parameters, z),
+    );
     final List<List<int>> Azct = subtractVectorNtt(parameters, Az, ct);
 
-    final List<List<int>> wApproxPrime = List.generate(Azct.length, (int i) => nttInverse(parameters, Azct[i]));
-    final List<List<int>> w1Prime = List.generate(parameters.k(), (int i) {
-      return List.generate(wApproxPrime[i].length, (int j) => useHint(parameters, h[i][j], wApproxPrime[i][j]));
-    });
+    final List<List<int>> wApproxPrime = vectorNttInverse(parameters, Azct);
+    final List<List<int>> w1Prime = vectorUseHint(parameters, wApproxPrime, h);
 
     inputHash = List.generate(64, (int i) => mu[i]);
     inputHash.addAll(w1Encode(parameters, w1Prime));
@@ -433,9 +405,7 @@ class MLDSA {
     hasher = IncrementalSHAKE(true);
     hasher.absorb(Uint8List.fromList(inputHash));
     final Uint8List cTildePrime = hasher.squeeze(parameters.lambda() ~/ 4);
-
-    final int zMax =
-          z.expand((polynomial) => polynomial).reduce((int a, int b) => a.abs() > b.abs() ? a.abs() : b.abs());
+    final int zMax = vectorMaxAbsCoefficient(parameters, z);
 
     bool cTildeMatches = true;
     for (int i = 0; i < cTilde.length; i++) {
@@ -444,6 +414,6 @@ class MLDSA {
       }
     }
 
-  	return zMax < (parameters.gamma1() - parameters.beta()) && cTildeMatches;
+    return zMax < (parameters.gamma1() - parameters.beta()) && cTildeMatches;
   }
 }
