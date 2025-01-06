@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 
 import 'conversion.dart';
-import 'keccak.dart';
+import 'shake.dart';
 import 'ml_dsa_base.dart';
 import 'reduction.dart';
 
 List<int> sampleInBall(ParameterSet parameters, Uint8List rho) {
-  final List<int> c = List<int>.generate(256, (int _) => 0);
+  final List<int> c = List.generate(256, (int _) => 0);
 
-  final Keccak hasher = Keccak(KeccakAlgorithm.shake256);
+  IncrementalSHAKE hasher = IncrementalSHAKE(true);
   hasher.absorb(rho);
   final Uint8List s = hasher.squeeze(8);
 
@@ -36,7 +36,7 @@ List<int> sampleInBall(ParameterSet parameters, Uint8List rho) {
 List<int> rejNttPoly(ParameterSet parameters, Uint8List rho) {
   final List<int> a = List<int>.filled(256, 0, growable: false);
 
-  final Keccak hasher = Keccak(KeccakAlgorithm.shake128);
+  IncrementalSHAKE hasher = IncrementalSHAKE(false);
   hasher.absorb(rho);
 
   int j = 0;
@@ -58,7 +58,7 @@ List<int> rejNttPoly(ParameterSet parameters, Uint8List rho) {
 List<int> rejBoundedPoly(ParameterSet parameters, Uint8List rho) {
   final List<int> a = List<int>.filled(256, 0, growable: false);
 
-  final Keccak hasher = Keccak(KeccakAlgorithm.shake256);
+  IncrementalSHAKE hasher = IncrementalSHAKE(true);
   hasher.absorb(rho);
 
   int j = 0;
@@ -98,22 +98,22 @@ List<int> subtractPolynomials(
 
 List<List<int>> vectorAddPolynomials(
     ParameterSet parameters, List<List<int>> a, List<List<int>> b) {
-  return List<List<int>>.generate(a.length, (int i) {
+  return List.generate(a.length, (int i) {
     return addPolynomials(parameters, a[i], b[i]);
   }, growable: false);
 }
 
 List<List<int>> vectorSubtractPolynomials(
     ParameterSet parameters, List<List<int>> a, List<List<int>> b) {
-  return List<List<int>>.generate(a.length, (int i) {
+  return List.generate(a.length, (int i) {
     return subtractPolynomials(parameters, a[i], b[i]);
   }, growable: false);
 }
 
 List<List<int>> scalarVectorMultiply(
     ParameterSet parameters, int c, List<List<int>> v) {
-  return List<List<int>>.generate(v.length, (int i) {
-    return List<int>.generate(v[i].length, (int j) {
+  return List.generate(v.length, (int i) {
+    return List.generate(v[i].length, (int j) {
       return modQSymmetric(c * v[i][j], parameters.q());
     });
   });

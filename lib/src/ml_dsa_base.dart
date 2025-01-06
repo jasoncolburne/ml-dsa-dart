@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'conversion.dart';
 import 'entropy.dart';
 import 'expansion.dart';
-import 'keccak.dart';
+import 'shake.dart';
 import 'ntt.dart';
 import 'polynomials.dart';
 import 'reduction.dart';
@@ -160,12 +160,13 @@ class MLDSA {
 
     final rnd = rbg(seedLength);
 
-    final Uint8List mPrime = integerToBytes(0, 1);
+    final List<int> mPrime = List.empty(growable: true);
+    mPrime.addAll(integerToBytes(0, 1));
     mPrime.addAll(integerToBytes(ctx.length, 1));
     mPrime.addAll(ctx);
     mPrime.addAll(message);
 
-    return _sign(sk, mPrime, rnd);
+    return _sign(sk, Uint8List.fromList(mPrime), rnd);
   }
 
   Uint8List signDeterministically(
@@ -174,14 +175,15 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final rnd = List<int>.generate(seedLength, (int _) => 0, growable: false);
+    final Uint8List rnd = Uint8List.fromList(List.generate(seedLength, (int _) => 0, growable: false));
 
-    final Uint8List mPrime = integerToBytes(0, 1);
+    final List<int> mPrime = List.empty(growable: true);
+    mPrime.addAll(integerToBytes(0, 1));
     mPrime.addAll(integerToBytes(ctx.length, 1));
     mPrime.addAll(ctx);
     mPrime.addAll(message);
 
-    return _sign(sk, mPrime, Uint8List.fromList(rnd));
+    return _sign(sk, Uint8List.fromList(mPrime), rnd);
   }
 
   bool verify(
@@ -190,20 +192,21 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final Uint8List mPrime = integerToBytes(0, 1);
+    final List<int> mPrime = List.empty(growable: true);
+    mPrime.addAll(integerToBytes(0, 1));
     mPrime.addAll(integerToBytes(ctx.length, 1));
     mPrime.addAll(ctx);
     mPrime.addAll(message);
 
-    return _verify(pk, mPrime, signature);
+    return _verify(pk, Uint8List.fromList(mPrime), signature);
   }
 
   (Uint8List, Uint8List) _keyGen(Uint8List rnd) {
-    final List<int> input = List<int>.generate(rnd.length, (int i) => rnd[i]);
+    final List<int> input = List.generate(rnd.length, (int i) => rnd[i]);
     input.addAll(integerToBytes(parameters.k(), 1));
     input.addAll(integerToBytes(parameters.l(), 1));
 
-    Keccak hasher = Keccak(KeccakAlgorithm.shake256);
+    IncrementalSHAKE hasher = IncrementalSHAKE(true);
     hasher.absorb(Uint8List.fromList(input));
     final Uint8List bytes = hasher.squeeze(128);
 
@@ -219,19 +222,19 @@ class MLDSA {
 
     final List<List<int>> product = matrixVectorNtt(parameters, AHat, s1Hat);
 
-    final List<List<int>> t = List<List<int>>.generate(parameters.k(), (int j) {
+    final List<List<int>> t = List.generate(parameters.k(), (int j) {
       return addPolynomials(
           parameters, nttInverse(parameters, product[j]), s2[j]);
     }, growable: false);
 
-    List<List<int>> t0 = List<List<int>>.generate(
+    List<List<int>> t0 = List.generate(
       parameters.k(),
-      (int _) => List<int>.generate(256, (int _) => 0, growable: false),
+      (int _) => List.generate(256, (int _) => 0, growable: false),
       growable: false,
     );
-    List<List<int>> t1 = List<List<int>>.generate(
+    List<List<int>> t1 = List.generate(
       parameters.k(),
-      (int _) => List<int>.generate(256, (int _) => 0, growable: false),
+      (int _) => List.generate(256, (int _) => 0, growable: false),
       growable: false,
     );
 
@@ -246,7 +249,7 @@ class MLDSA {
 
     final Uint8List pk = pkEncode(parameters, rho, t1);
 
-    hasher = Keccak(KeccakAlgorithm.shake256);
+    hasher = IncrementalSHAKE(true);
     hasher.absorb(pk);
     final Uint8List tr = hasher.squeeze(64);
     final Uint8List sk = skEncode(parameters, rho, kappa, tr, s1, s2, t0);
@@ -270,19 +273,19 @@ class MLDSA {
     // ignore: non_constant_identifier_names
     final List<List<List<int>>> AHat = expandA(parameters, rho);
 
-    List<int> inputHash = List<int>.generate(64, (int i) => tr[i]);
+    List<int> inputHash = List.generate(64, (int i) => tr[i]);
     inputHash.addAll(mPrime);
 
-    Keccak hasher = Keccak(KeccakAlgorithm.shake256);
+    IncrementalSHAKE hasher = IncrementalSHAKE(true);
     hasher.absorb(Uint8List.fromList(inputHash));
     final Uint8List mu = hasher.squeeze(64);
 
-    inputHash = List<int>.generate(32, (int i) => kappa[i]);
+    inputHash = List.generate(32, (int i) => kappa[i]);
     inputHash.addAll(rnd);
     inputHash.addAll(mu);
 
     // important to reset the hasher here
-    hasher = Keccak(KeccakAlgorithm.shake256);
+    hasher = IncrementalSHAKE(true);
     hasher.absorb(Uint8List.fromList(inputHash));
     final Uint8List rhoPrimePrime = hasher.squeeze(64);
 
@@ -293,28 +296,29 @@ class MLDSA {
     Uint8List cTilde = Uint8List(0);
 
     while (z == null && h == null) {
-      final List<List<int>> y =
-          expandMask(parameters, rhoPrimePrime, parameters.k());
+      final List<List<int>> y = expandMask(
+        parameters,
+        rhoPrimePrime,
+        k,
+      );
 
       final List<List<int>> yHat = vectorNtt(parameters, y);
       final List<List<int>> product = matrixVectorNtt(parameters, AHat, yHat);
 
-      final List<List<int>> w =
-          List<List<int>>.generate(parameters.k(), (int j) {
+      final List<List<int>> w = List.generate(parameters.k(), (int j) {
         return nttInverse(parameters, product[j]);
       }, growable: false);
 
-      final List<List<int>> w1 =
-          List<List<int>>.generate(parameters.k(), (int j) {
-        return List<int>.generate(256, (int i) {
+      final List<List<int>> w1 = List.generate(parameters.k(), (int j) {
+        return List.generate(256, (int i) {
           return highBits(parameters, w[j][i]);
         }, growable: false);
       }, growable: false);
 
-      inputHash = List<int>.generate(64, (int i) => mu[i]);
+      inputHash = List.generate(64, (int i) => mu[i]);
       inputHash.addAll(w1Encode(parameters, w1));
 
-      Keccak hasher = Keccak(KeccakAlgorithm.shake256);
+      IncrementalSHAKE hasher = IncrementalSHAKE(true);
       hasher.absorb(Uint8List.fromList(inputHash));
       cTilde = hasher.squeeze(parameters.lambda() ~/ 4);
 
@@ -340,11 +344,11 @@ class MLDSA {
         final int x = lowBits(parameters, a);
         final int y = lowBits(parameters, b);
 
-        return x > y ? x : y;
+        return x.abs() > y.abs() ? x.abs() : y.abs();
       });
 
       final int zMax =
-          z.expand((row) => row).reduce((int a, int b) => a > b ? a : b);
+          z.expand((polynomial) => polynomial).reduce((int a, int b) => a.abs() > b.abs() ? a.abs() : b.abs());
 
       if (zMax >= parameters.gamma1() - parameters.beta() ||
           r0Max >= parameters.gamma2() - parameters.beta()) {
@@ -359,8 +363,8 @@ class MLDSA {
         final List<List<int>> wPrime = vectorAddPolynomials(
             parameters, vectorSubtractPolynomials(parameters, w, cs2), ct0);
 
-        h = List<List<int>>.generate(ct0Neg.length, (int i) {
-          return List<int>.generate(ct0Neg[0].length, (int j) {
+        h = List.generate(ct0Neg.length, (int i) {
+          return List.generate(ct0Neg[0].length, (int j) {
             return makeHint(parameters, ct0Neg[i][j], wPrime[i][j]);
           }, growable: false);
         }, growable: false);
@@ -379,9 +383,8 @@ class MLDSA {
       k += parameters.l();
     }
 
-    final List<List<int>> zModQSymmetric =
-        List<List<int>>.generate(z!.length, (int i) {
-      return List<int>.generate(z![i].length, (int j) {
+    final List<List<int>> zModQSymmetric = List.generate(z!.length, (int i) {
+      return List.generate(z![i].length, (int j) {
         return modQSymmetric(z![i][j], parameters.q());
       });
     });

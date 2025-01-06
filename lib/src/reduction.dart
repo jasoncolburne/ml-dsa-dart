@@ -7,7 +7,7 @@ int modMultiply(int a, int b, int q) {
 int modQSymmetric(int n, int q) {
   int result = modQ(n, q);
 
-  if (result > (q / 2).floor()) {
+  if (result > q ~/ 2) {
     result -= q;
   }
 
