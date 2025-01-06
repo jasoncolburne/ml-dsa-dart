@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:hex/hex.dart';
@@ -76,7 +77,44 @@ bool testMLDSARoundTrip(ParameterSet parameters, int skLen, int pkLen, int sigLe
     return false;
   }
 
-  return dsa.verify(pk, message, sig, ctx);
+  if (!dsa.verify(pk, message, sig, ctx)) {
+    print("verification failed");
+    return false;
+  }
+
+  final Uint8List pkPrime = mutate(pk);
+  final Uint8List messagePrime = mutate(message);
+  final Uint8List sigPrime = mutate(sig);
+  final Uint8List ctxPrime = mutate(ctx);
+
+  if (dsa.verify(pkPrime, message, sig, ctx)) {
+    print("verification SUCCEEDED incorrectly for a mutated pk");
+    return false;
+  }
+
+  if (dsa.verify(pk, messagePrime, sig, ctx)) {
+    print("verification SUCCEEDED incorrectly for a mutated message");
+    return false;
+  }
+
+  if (dsa.verify(pk, message, sigPrime, ctx)) {
+    print("verification SUCCEEDED incorrectly for a mutated signature");
+    return false;
+  }
+
+  if (dsa.verify(pk, message, sig, ctxPrime)) {
+    print("verification SUCCEEDED incorrectly for a mutated context");
+    return false;
+  }
+
+  return true;
+}
+
+Uint8List mutate(Uint8List input) {
+  final data = List.generate(input.length, (int i) => input[i]);
+  final offset = Random.secure().nextInt(data.length);
+  data[offset] ^= 0x01;
+  return Uint8List.fromList(data);
 }
 
 void main() {
