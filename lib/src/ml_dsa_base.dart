@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:typed_data';
 
 import 'conversion.dart';
@@ -214,7 +216,6 @@ class MLDSA {
     final Uint8List rhoPrime = bytes.sublist(32, 96);
     final Uint8List kappa = bytes.sublist(96);
 
-    //ignore: non_constant_identifier_names
     final List<List<List<int>>> AHat = expandA(parameters, rho);
     final (List<List<int>> s1, List<List<int>> s2) =
         expandS(parameters, rhoPrime);
@@ -270,7 +271,6 @@ class MLDSA {
     final List<List<int>> s1Hat = vectorNtt(parameters, s1);
     final List<List<int>> s2Hat = vectorNtt(parameters, s2);
     final List<List<int>> t0Hat = vectorNtt(parameters, t0);
-    // ignore: non_constant_identifier_names
     final List<List<List<int>>> AHat = expandA(parameters, rho);
 
     List<int> inputHash = List.generate(64, (int i) => tr[i]);
@@ -370,7 +370,7 @@ class MLDSA {
         }, growable: false);
 
         final int ct0Max =
-            ct0.expand((row) => row).reduce((int a, int b) => a > b ? a : b);
+            ct0.expand((row) => row).reduce((int a, int b) => a.abs() > b.abs() ? a.abs() : b.abs());
         final int onesInH =
             h.expand((row) => row).reduce((int a, int b) => a + b);
 
@@ -395,6 +395,55 @@ class MLDSA {
   }
 
   bool _verify(Uint8List pk, Uint8List mPrime, Uint8List sigma) {
-    return false;
+    final (Uint8List rho, List<List<int>> t1) = pkDecode(parameters, pk);
+    final (Uint8List cTilde, List<List<int>> z, List<List<int>>? h) = sigDecode(parameters, sigma);
+
+    if (h == null) {
+      return false;
+    }
+
+    final List<List<List<int>>> AHat = expandA(parameters, rho);
+	
+    IncrementalSHAKE hasher = IncrementalSHAKE(true);
+    hasher.absorb(pk);
+    final Uint8List tr = hasher.squeeze(64);
+
+	  List <int> inputHash = List.generate(64, (int i) => tr[i]);
+    inputHash.addAll(mPrime);
+
+    hasher = IncrementalSHAKE(true);
+    hasher.absorb(Uint8List.fromList(inputHash));
+    final Uint8List mu = hasher.squeeze(64);
+
+	  final List<int> c = sampleInBall(parameters, cTilde);
+	  final List<int> cHat = ntt(parameters, c);
+
+    final List<List<int>> ct = scalarVectorNtt(parameters, cHat, vectorNtt(parameters, scalarVectorMultiply(parameters, 1 << parameters.d(), t1)));
+    final List<List<int>> Az = matrixVectorNtt(parameters, AHat, vectorNtt(parameters, z));
+    final List<List<int>> Azct = subtractVectorNtt(parameters, Az, ct);
+
+    final List<List<int>> wApproxPrime = List.generate(Azct.length, (int i) => nttInverse(parameters, Azct[i]));
+    final List<List<int>> w1Prime = List.generate(parameters.k(), (int i) {
+      return List.generate(wApproxPrime[i].length, (int j) => useHint(parameters, h[i][j], wApproxPrime[i][j]));
+    });
+
+    inputHash = List.generate(64, (int i) => mu[i]);
+    inputHash.addAll(w1Encode(parameters, w1Prime));
+
+    hasher = IncrementalSHAKE(true);
+    hasher.absorb(Uint8List.fromList(inputHash));
+    final Uint8List cTildePrime = hasher.squeeze(parameters.lambda() ~/ 4);
+
+    final int zMax =
+          z.expand((polynomial) => polynomial).reduce((int a, int b) => a.abs() > b.abs() ? a.abs() : b.abs());
+
+    bool cTildeMatches = true;
+    for (int i = 0; i < cTilde.length; i++) {
+      if (cTilde[i] != cTildePrime[i]) {
+        cTildeMatches = false;
+      }
+    }
+
+  	return zMax < (parameters.gamma1() - parameters.beta()) && cTildeMatches;
   }
 }
