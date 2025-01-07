@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'ml_dsa_base.dart';
 import 'reduction.dart';
+import 'shake.dart';
 
 int? coeffFromHalfByte(ParameterSet parameters, int b) {
   if (parameters.eta() == 2 && b < 15) {
@@ -355,4 +356,27 @@ List<List<int>>? hintBitUnpack(ParameterSet parameters, Uint8List y) {
   }
 
   return h;
+}
+
+Uint8List concatenateBytes(List<Uint8List> args) {
+  final List<int> result = List.empty(growable: true);
+
+  for (final arg in args) {
+    result.addAll(arg);
+  }
+
+	return Uint8List.fromList(result);
+}
+
+Uint8List concatenateBytesAndSHAKE256(int outputLength, List<Uint8List> args) {
+	Uint8List input;
+	if (args.length == 1) {
+		input = args[0];
+	} else {
+		input = concatenateBytes(args);
+	}
+
+  final IncrementalSHAKE hasher = IncrementalSHAKE(true);
+  hasher.absorb(input);
+  return hasher.squeeze(outputLength);
 }

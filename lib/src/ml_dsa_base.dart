@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'conversion.dart';
 import 'entropy.dart';
 import 'expansion.dart';
-import 'shake.dart';
 import 'ntt.dart';
 import 'polynomials.dart';
 import 'reduction.dart';
@@ -162,11 +161,12 @@ class MLDSA {
 
     final rnd = rbg(seedLength);
 
-    final List<int> mPrime = List.empty(growable: true);
-    mPrime.addAll(integerToBytes(0, 1));
-    mPrime.addAll(integerToBytes(ctx.length, 1));
-    mPrime.addAll(ctx);
-    mPrime.addAll(message);
+    final List<int> mPrime = concatenateBytes([
+      integerToBytes(0, 1),
+      integerToBytes(ctx.length, 1),
+      ctx,
+      message,
+    ]);
 
     return _sign(sk, Uint8List.fromList(mPrime), rnd);
   }
@@ -181,11 +181,12 @@ class MLDSA {
       List.generate(seedLength, (int _) => 0, growable: false),
     );
 
-    final List<int> mPrime = List.empty(growable: true);
-    mPrime.addAll(integerToBytes(0, 1));
-    mPrime.addAll(integerToBytes(ctx.length, 1));
-    mPrime.addAll(ctx);
-    mPrime.addAll(message);
+    final List<int> mPrime = concatenateBytes([
+      integerToBytes(0, 1),
+      integerToBytes(ctx.length, 1),
+      ctx,
+      message,
+    ]);
 
     return _sign(sk, Uint8List.fromList(mPrime), rnd);
   }
@@ -200,23 +201,22 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final List<int> mPrime = List.empty(growable: true);
-    mPrime.addAll(integerToBytes(0, 1));
-    mPrime.addAll(integerToBytes(ctx.length, 1));
-    mPrime.addAll(ctx);
-    mPrime.addAll(message);
+    final List<int> mPrime = concatenateBytes([
+      integerToBytes(0, 1),
+      integerToBytes(ctx.length, 1),
+      ctx,
+      message,
+    ]);
 
     return _verify(pk, Uint8List.fromList(mPrime), signature);
   }
 
   (Uint8List, Uint8List) _keyGen(Uint8List rnd) {
-    final List<int> input = List.generate(rnd.length, (int i) => rnd[i]);
-    input.addAll(integerToBytes(parameters.k(), 1));
-    input.addAll(integerToBytes(parameters.l(), 1));
-
-    IncrementalSHAKE hasher = IncrementalSHAKE(true);
-    hasher.absorb(Uint8List.fromList(input));
-    final Uint8List bytes = hasher.squeeze(128);
+    final Uint8List bytes = concatenateBytesAndSHAKE256(128, [
+      rnd,
+      integerToBytes(parameters.k(), 1),
+      integerToBytes(parameters.l(), 1),
+    ]);
 
     final Uint8List rho = bytes.sublist(0, 32);
     final Uint8List rhoPrime = bytes.sublist(32, 96);
@@ -241,9 +241,7 @@ class MLDSA {
 
     final Uint8List pk = pkEncode(parameters, rho, t1);
 
-    hasher = IncrementalSHAKE(true);
-    hasher.absorb(pk);
-    final Uint8List tr = hasher.squeeze(64);
+    final Uint8List tr = concatenateBytesAndSHAKE256(64, [pk]);
     final Uint8List sk = skEncode(parameters, rho, kappa, tr, s1, s2, t0);
 
     return (pk, sk);
@@ -264,23 +262,9 @@ class MLDSA {
     final List<List<int>> t0Hat = vectorNtt(parameters, t0);
     final List<List<List<int>>> AHat = expandA(parameters, rho);
 
-    List<int> inputHash = List.generate(64, (int i) => tr[i]);
-    inputHash.addAll(mPrime);
+    final Uint8List mu = concatenateBytesAndSHAKE256(64, [tr, mPrime]);
+    final Uint8List rhoPrimePrime = concatenateBytesAndSHAKE256(64, [kappa, rnd, mu]);
 
-    IncrementalSHAKE hasher = IncrementalSHAKE(true);
-    hasher.absorb(Uint8List.fromList(inputHash));
-    final Uint8List mu = hasher.squeeze(64);
-
-    inputHash = List.generate(32, (int i) => kappa[i]);
-    inputHash.addAll(rnd);
-    inputHash.addAll(mu);
-
-    // important to reset the hasher here
-    hasher = IncrementalSHAKE(true);
-    hasher.absorb(Uint8List.fromList(inputHash));
-    final Uint8List rhoPrimePrime = hasher.squeeze(64);
-
-    // ignore: unused_local_variable
     int k = 0;
     List<List<int>>? z;
     List<List<int>>? h;
@@ -298,13 +282,10 @@ class MLDSA {
       final List<List<int>> w = vectorNttInverse(parameters, product);
       final List<List<int>> w1 = vectorHighBits(parameters, w);
 
-      inputHash = List.generate(64, (int i) => mu[i]);
-      inputHash.addAll(w1Encode(parameters, w1));
-
-      IncrementalSHAKE hasher = IncrementalSHAKE(true);
-      hasher.absorb(Uint8List.fromList(inputHash));
-      cTilde = hasher.squeeze(parameters.lambda() ~/ 4);
-
+      cTilde = concatenateBytesAndSHAKE256(parameters.lambda() ~/ 4, [
+        mu,
+        w1Encode(parameters, w1),
+      ]);
       final List<int> c = sampleInBall(parameters, cTilde);
       final List<int> cHat = ntt(parameters, c);
 
@@ -367,16 +348,8 @@ class MLDSA {
 
     final List<List<List<int>>> AHat = expandA(parameters, rho);
 
-    IncrementalSHAKE hasher = IncrementalSHAKE(true);
-    hasher.absorb(pk);
-    final Uint8List tr = hasher.squeeze(64);
-
-    List<int> inputHash = List.generate(64, (int i) => tr[i]);
-    inputHash.addAll(mPrime);
-
-    hasher = IncrementalSHAKE(true);
-    hasher.absorb(Uint8List.fromList(inputHash));
-    final Uint8List mu = hasher.squeeze(64);
+    final Uint8List tr = concatenateBytesAndSHAKE256(64, [pk]);
+    final Uint8List mu = concatenateBytesAndSHAKE256(64, [tr, mPrime]);
 
     final List<int> c = sampleInBall(parameters, cTilde);
     final List<int> cHat = ntt(parameters, c);
@@ -399,12 +372,10 @@ class MLDSA {
     final List<List<int>> wApproxPrime = vectorNttInverse(parameters, Azct);
     final List<List<int>> w1Prime = vectorUseHint(parameters, wApproxPrime, h);
 
-    inputHash = List.generate(64, (int i) => mu[i]);
-    inputHash.addAll(w1Encode(parameters, w1Prime));
-
-    hasher = IncrementalSHAKE(true);
-    hasher.absorb(Uint8List.fromList(inputHash));
-    final Uint8List cTildePrime = hasher.squeeze(parameters.lambda() ~/ 4);
+    final Uint8List cTildePrime = concatenateBytesAndSHAKE256(parameters.lambda() ~/ 4, [
+      mu,
+      w1Encode(parameters, w1Prime),
+    ]);
     final int zMax = vectorMaxAbsCoefficient(parameters, z);
 
     bool cTildeMatches = true;
