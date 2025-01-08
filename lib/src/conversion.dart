@@ -365,16 +365,17 @@ Uint8List concatenateBytes(List<Uint8List> args) {
     result.addAll(arg);
   }
 
-	return Uint8List.fromList(result);
+  return Uint8List.fromList(result);
 }
 
 Uint8List concatenateBytesAndSHAKE256(int outputLength, List<Uint8List> args) {
-	Uint8List input;
-	if (args.length == 1) {
-		input = args[0];
-	} else {
-		input = concatenateBytes(args);
-	}
+  Uint8List input;
+
+  if (args.length == 1) {
+    input = args[0];
+  } else {
+    input = concatenateBytes(args);
+  }
 
   final IncrementalSHAKE hasher = IncrementalSHAKE(true);
   hasher.absorb(input);

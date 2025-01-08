@@ -263,7 +263,11 @@ class MLDSA {
     final List<List<List<int>>> AHat = expandA(parameters, rho);
 
     final Uint8List mu = concatenateBytesAndSHAKE256(64, [tr, mPrime]);
-    final Uint8List rhoPrimePrime = concatenateBytesAndSHAKE256(64, [kappa, rnd, mu]);
+    final Uint8List rhoPrimePrime = concatenateBytesAndSHAKE256(64, [
+      kappa,
+      rnd,
+      mu,
+    ]);
 
     int k = 0;
     List<List<int>>? z;
@@ -372,10 +376,10 @@ class MLDSA {
     final List<List<int>> wApproxPrime = vectorNttInverse(parameters, Azct);
     final List<List<int>> w1Prime = vectorUseHint(parameters, wApproxPrime, h);
 
-    final Uint8List cTildePrime = concatenateBytesAndSHAKE256(parameters.lambda() ~/ 4, [
-      mu,
-      w1Encode(parameters, w1Prime),
-    ]);
+    final Uint8List cTildePrime = concatenateBytesAndSHAKE256(
+      parameters.lambda() ~/ 4,
+      [mu, w1Encode(parameters, w1Prime)],
+    );
     final int zMax = vectorMaxAbsCoefficient(parameters, z);
 
     bool cTildeMatches = true;
