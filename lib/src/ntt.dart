@@ -1,9 +1,11 @@
+import 'dart:typed_data';
+
 import 'ml_dsa_base.dart';
 import 'reduction.dart';
 import 'zetas.dart';
 
-List<int> ntt(ParameterSet parameters, List<int> w) {
-  final List<int> wHat = List.generate(256, (int i) => w[i], growable: false);
+Int32List ntt(ParameterSet parameters, Int32List w) {
+  final Int32List wHat = Int32List.fromList(List.generate(256, (int i) => w[i], growable: false),);
 
   int m = 0;
   final int q = parameters.q();
@@ -24,8 +26,8 @@ List<int> ntt(ParameterSet parameters, List<int> w) {
   return wHat;
 }
 
-List<int> nttInverse(ParameterSet parameters, List<int> wHat) {
-  final List<int> w = List.generate(256, (int i) => wHat[i], growable: false);
+Int32List nttInverse(ParameterSet parameters, Int32List wHat) {
+  final Int32List w = Int32List.fromList(List.generate(256, (int i) => wHat[i], growable: false),);
 
   int m = 256;
   int len = 1;
@@ -57,59 +59,55 @@ List<int> nttInverse(ParameterSet parameters, List<int> wHat) {
   return w;
 }
 
-List<int> addNtt(ParameterSet parameters, List<int> aHat, List<int> bHat) {
-  return List.generate(256, (int i) => modQ(aHat[i] + bHat[i], parameters.q()));
+Int32List addNtt(ParameterSet parameters, Int32List aHat, Int32List bHat) {
+  return Int32List.fromList(List.generate(256, (int i) => modQ(aHat[i] + bHat[i], parameters.q())),);
 }
 
-List<int> subtractNtt(ParameterSet parameters, aHat, List<int> bHat) {
-  return List.generate(256, (int i) => modQ(aHat[i] - bHat[i], parameters.q()));
+Int32List subtractNtt(ParameterSet parameters, aHat, Int32List bHat) {
+  return Int32List.fromList(List.generate(256, (int i) => modQ(aHat[i] - bHat[i], parameters.q())),);
 }
 
-List<int> multiplyNtt(ParameterSet parameters, aHat, List<int> bHat) {
-  return List.generate(
+Int32List multiplyNtt(ParameterSet parameters, aHat, Int32List bHat) {
+  return Int32List.fromList(List.generate(
     256,
     (int i) => modMultiply(aHat[i], bHat[i], parameters.q()),
-  );
+  ));
 }
 
-List<List<int>> vectorNtt(ParameterSet parameters, List<List<int>> vHat) {
+List<Int32List> vectorNtt(ParameterSet parameters, List<Int32List> vHat) {
   return List.generate(vHat.length, (int i) => ntt(parameters, vHat[i]));
 }
 
-List<List<int>> vectorNttInverse(
-    ParameterSet parameters, List<List<int>> vHat) {
+List<Int32List> vectorNttInverse(
+    ParameterSet parameters, List<Int32List> vHat) {
   return List.generate(vHat.length, (int i) => nttInverse(parameters, vHat[i]));
 }
 
-List<List<int>> subtractVectorNtt(
-    ParameterSet parameters, List<List<int>> vHat, List<List<int>> wHat) {
+List<Int32List> subtractVectorNtt(
+    ParameterSet parameters, List<Int32List> vHat, List<Int32List> wHat) {
   return List.generate(
     vHat.length,
     (int i) => subtractNtt(parameters, vHat[i], wHat[i]),
   );
 }
 
-List<List<int>> scalarVectorNtt(
-    ParameterSet parameters, List<int> cHat, List<List<int>> vHat) {
+List<Int32List> scalarVectorNtt(
+    ParameterSet parameters, Int32List cHat, List<Int32List> vHat) {
   return List.generate(
     vHat.length,
     (int i) => multiplyNtt(parameters, cHat, vHat[i]),
   );
 }
 
-List<List<int>> matrixVectorNtt(
+List<Int32List> matrixVectorNtt(
   ParameterSet parameters,
   // ignore: non_constant_identifier_names
-  List<List<List<int>>> MHat,
-  List<List<int>> vHat,
+  List<List<Int32List>> MHat,
+  List<Int32List> vHat,
 ) {
-  final List<List<int>> wHat = List.generate(
+  final List<Int32List> wHat = List.filled(
     parameters.k(),
-    (int _) {
-      return List.generate(256, (int _) => 0, growable: false);
-    },
-    growable: false,
-  );
+    Int32List(256), growable: false,);
 
   for (int i = 0; i < parameters.k(); i++) {
     for (int j = 0; j < parameters.l(); j++) {

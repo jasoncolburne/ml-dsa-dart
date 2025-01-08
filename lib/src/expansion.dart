@@ -5,10 +5,10 @@ import 'shake.dart';
 import 'ml_dsa_base.dart';
 import 'polynomials.dart';
 
-List<List<List<int>>> expandA(ParameterSet parameters, Uint8List rho) {
+List<List<Int32List>> expandA(ParameterSet parameters, Uint8List rho) {
   final int rhoLength = rho.length;
-  final List<int> rhoPrime = List.generate(rhoLength, (int i) => rho[i]);
-  rhoPrime.addAll([0, 0]);
+  final Uint8List rhoPrime = Uint8List(rhoLength + 2);
+  rhoPrime.setAll(0, rho);
 
   return List.generate(parameters.k(), (int r) {
     return List.generate(parameters.l(), (int s) {
@@ -20,18 +20,18 @@ List<List<List<int>>> expandA(ParameterSet parameters, Uint8List rho) {
   });
 }
 
-(List<List<int>>, List<List<int>>) expandS(
+(List<Int32List>, List<Int32List>) expandS(
     ParameterSet parameters, Uint8List rho) {
   final int rhoLength = rho.length;
-  final List<int> rhoPrime = List.generate(rhoLength, (int i) => rho[i]);
-  rhoPrime.addAll([0, 0]);
+  final Uint8List rhoPrime = Uint8List(rhoLength + 2);
+  rhoPrime.setAll(0, rho);
 
-  final List<List<int>> s1 = List.generate(parameters.l(), (int _) {
-    return List.empty();
-  }, growable: false);
-  final List<List<int>> s2 = List.generate(parameters.k(), (int _) {
-    return List.empty();
-  }, growable: false);
+  final List<Int32List> s1 = List.filled(parameters.l(), 
+     Int32List(0)
+  , growable: false);
+  final List<Int32List> s2 = List.filled(parameters.k(),
+    Int32List(0)
+  , growable: false);
 
   for (int r = 0; r < parameters.l(); r++) {
     final Uint8List bytes = integerToBytes(r, 2);
@@ -50,9 +50,9 @@ List<List<List<int>>> expandA(ParameterSet parameters, Uint8List rho) {
   return (s1, s2);
 }
 
-List<List<int>> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
+List<Int32List> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
   final int rhoLength = rho.length;
-  final List<int> rhoPrime = List.generate(rhoLength, (int i) => rho[i]);
+  final Int32List rhoPrime = Int32List.fromList(rho);
   rhoPrime.addAll([0, 0]);
 
   final int c = 1 + (parameters.gamma1() - 1).bitLength;

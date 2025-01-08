@@ -1,4 +1,6 @@
-final List<int> zetas = [
+import 'dart:typed_data';
+
+final Int32List zetas = Int32List.fromList([
   0,
   4808194,
   3765607,
@@ -255,4 +257,4 @@ final List<int> zetas = [
   7598542,
   1054478,
   7648983,
-];
+]);

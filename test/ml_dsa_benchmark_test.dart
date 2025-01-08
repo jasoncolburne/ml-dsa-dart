@@ -16,7 +16,19 @@ void benchmarkMLDSAVerify(MLDSA dsa, Uint8List pk, Uint8List message, Uint8List 
   dsa.verify(pk, message, sig, ctx);
 }
 
-class GenerateBenchmark extends BenchmarkBase {
+class MLDSABenchmark extends BenchmarkBase {
+  MLDSABenchmark(super.title);
+
+  @override
+  void report() {
+    var microseconds = measure();
+    var secondsPerRun = microseconds / 1000000;
+    var operations = 1 / secondsPerRun;
+    print('$name: ${microseconds.toStringAsFixed(3)} µs/op ${operations.toStringAsFixed(3)} ops/s');
+  }
+}
+
+class GenerateBenchmark extends MLDSABenchmark {
   GenerateBenchmark(super.title, {required this.params});
 
   final ParameterSet params;
@@ -45,7 +57,7 @@ class MLDSA87GenerateBenchmark extends GenerateBenchmark {
   MLDSA87GenerateBenchmark() : super('87-Generate', params: MLDSA87Parameters());
 }
 
-class SignBenchmark extends BenchmarkBase {
+class SignBenchmark extends MLDSABenchmark {
   SignBenchmark(super.title, {required this.params});
   
   final ParameterSet params;
@@ -83,7 +95,7 @@ class MLDSA87SignBenchmark extends SignBenchmark {
   MLDSA87SignBenchmark() : super('87-Sign', params: MLDSA87Parameters());
 }
 
-class VerifyBenchmark extends BenchmarkBase {
+class VerifyBenchmark extends MLDSABenchmark {
   VerifyBenchmark(super.title, {required this.params});
   
   final ParameterSet params;

@@ -32,11 +32,9 @@ int? coeffFromThreeBytes(ParameterSet parameters, int b0, int b1, int b2) {
   return null;
 }
 
-Uint8List bitsToBytes(List<int> y) {
+Uint8List bitsToBytes(Uint8List y) {
   final alpha = y.length;
-
-  final List<int> z =
-      List.generate((alpha + 7) ~/ 8, (int _) => 0, growable: false);
+  final Uint8List z = Uint8List((alpha + 7) ~/ 8);
 
   for (int i = 0; i < alpha; i++) {
     if (y[i] == 1) {
@@ -44,14 +42,13 @@ Uint8List bitsToBytes(List<int> y) {
     }
   }
 
-  return Uint8List.fromList(z);
+  return z;
 }
 
-List<int> bytesToBits(Uint8List z) {
+Uint8List bytesToBits(Uint8List z) {
   final zLength = z.length;
-  final List<int> zPrime =
-      List.generate(zLength, (int i) => z[i], growable: false);
-  final List<int> y = List.generate(8 * zLength, (int _) => 0, growable: false);
+  final Uint8List zPrime = Uint8List.fromList(z);
+  final Uint8List y = Uint8List(8 * zLength);
 
   for (int i = 0; i < zLength; i++) {
     for (int j = 0; j < 8; j++) {
@@ -63,7 +60,7 @@ List<int> bytesToBits(Uint8List z) {
   return Uint8List.fromList(y);
 }
 
-int bitsToInteger(List<int> y, int alpha) {
+int bitsToInteger(Uint8List y, int alpha) {
   int x = 0;
 
   for (int i = 1; i <= alpha; i++) {
@@ -76,8 +73,8 @@ int bitsToInteger(List<int> y, int alpha) {
   return x;
 }
 
-List<int> integerToBits(int x, int alpha) {
-  final List<int> y = List.generate(alpha, (int _) => 0, growable: false);
+Uint8List integerToBits(int x, int alpha) {
+  final Uint8List y = Uint8List(alpha);
   int xPrime = x;
 
   for (int i = 0; i < alpha; i++) {
@@ -89,7 +86,7 @@ List<int> integerToBits(int x, int alpha) {
 }
 
 Uint8List integerToBytes(int x, int alpha) {
-  final List<int> y = List.generate(alpha, (int _) => 0, growable: false);
+  final Int32List y = Int32List(alpha);
 
   int xPrime = x;
   for (int i = 0; i < alpha; i++) {
@@ -100,9 +97,9 @@ Uint8List integerToBytes(int x, int alpha) {
   return Uint8List.fromList(y);
 }
 
-Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<List<int>> t) {
+Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<Int32List> t) {
   final int width = (parameters.q() - 1).bitLength - parameters.d();
-  final List<int> pk = List.generate(rho.length, (int i) => rho[i]);
+  final List<int> pk = List.from(rho);
 
   for (int i = 0; i < parameters.k(); i++) {
     pk.addAll(simpleBitPack(t[i], (1 << width) - 1));
@@ -111,13 +108,13 @@ Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<List<int>> t) {
   return Uint8List.fromList(pk);
 }
 
-(Uint8List, List<List<int>>) pkDecode(ParameterSet parameters, Uint8List pk) {
+(Uint8List, List<Int32List>) pkDecode(ParameterSet parameters, Uint8List pk) {
   final Uint8List rho = pk.sublist(0, 32);
   final Uint8List z = pk.sublist(32);
   final int toShift = (parameters.q() - 1).bitLength - parameters.d();
   final int width = 32 * toShift;
 
-  final List<List<int>> t = List.generate(parameters.k(), (int i) {
+  final List<Int32List> t = List.generate(parameters.k(), (int i) {
     final offset = i * width;
     final limit = offset + width;
     return simpleBitUnpack(z.sublist(offset, limit), (1 << toShift) - 1);
@@ -131,12 +128,11 @@ Uint8List skEncode(
   Uint8List rho,
   Uint8List kappa,
   Uint8List tr,
-  List<List<int>> s1,
-  List<List<int>> s2,
-  List<List<int>> t,
+  List<Int32List> s1,
+  List<Int32List> s2,
+  List<Int32List> t,
 ) {
-  final List<int> sk = List<int>.empty(growable: true);
-  sk.addAll(rho);
+  final List<int> sk = List.from(rho);
   sk.addAll(kappa);
   sk.addAll(tr);
 
@@ -165,9 +161,9 @@ Uint8List skEncode(
   Uint8List,
   Uint8List,
   Uint8List,
-  List<List<int>>,
-  List<List<int>>,
-  List<List<int>>
+  List<Int32List>,
+  List<Int32List>,
+  List<Int32List>
 ) skDecode(ParameterSet parameters, Uint8List sk) {
   final Uint8List rho = sk.sublist(0, 32);
   final Uint8List kappa = sk.sublist(32, 64);
@@ -178,7 +174,7 @@ Uint8List skEncode(
   final int eta = parameters.eta();
   final int width = 32 * (2 * eta).bitLength;
 
-  final List<List<int>> s1 = List.generate(parameters.l(), (int i) {
+  final List<Int32List> s1 = List.generate(parameters.l(), (int i) {
     final int offset = baseOffset + width * i;
     final int limit = offset + width;
     final Uint8List y = sk.sublist(offset, limit);
@@ -187,7 +183,7 @@ Uint8List skEncode(
 
   baseOffset += width * parameters.l();
 
-  final List<List<int>> s2 = List.generate(parameters.k(), (int i) {
+  final List<Int32List> s2 = List.generate(parameters.k(), (int i) {
     final offset = baseOffset + width * i;
     final int limit = offset + width;
     final Uint8List z = sk.sublist(offset, limit);
@@ -199,7 +195,7 @@ Uint8List skEncode(
   final int x = 1 << (parameters.d() - 1);
   final int y = x - 1;
 
-  final List<List<int>> t = List.generate(parameters.k(), (int i) {
+  final List<Int32List> t = List.generate(parameters.k(), (int i) {
     final int offset = baseOffset + wWidth * i;
     final int limit = offset + wWidth;
     final Uint8List w = sk.sublist(offset, limit);
@@ -210,21 +206,21 @@ Uint8List skEncode(
 }
 
 Uint8List sigEncode(ParameterSet parameters, Uint8List cTilde,
-    List<List<int>> z, List<List<int>> h) {
-  final List<int> sigma = List.generate(cTilde.length, (int i) => cTilde[i]);
+    List<Int32List> z, List<Int32List> h) {
+  final List<int> sigma = List.from(cTilde);
 
   final int gamma1 = parameters.gamma1();
   for (int i = 0; i < parameters.l(); i++) {
     sigma.addAll(bitPack(z[i], gamma1 - 1, gamma1));
   }
 
-  final List<int> hints = hintBitPack(parameters, h);
+  final Uint8List hints = hintBitPack(parameters, h);
   sigma.addAll(hints);
 
   return Uint8List.fromList(sigma);
 }
 
-(Uint8List, List<List<int>>, List<List<int>>?) sigDecode(
+(Uint8List, List<Int32List>, List<Int32List>?) sigDecode(
     ParameterSet parameters, Uint8List sigma) {
   final int width = 32 * (1 + (parameters.gamma1() - 1).bitLength);
 
@@ -241,70 +237,69 @@ Uint8List sigEncode(ParameterSet parameters, Uint8List cTilde,
         x.sublist(offset, limit), parameters.gamma1() - 1, parameters.gamma1());
   }, growable: false);
 
-  final List<List<int>>? h = hintBitUnpack(parameters, y);
+  final List<Int32List>? h = hintBitUnpack(parameters, y);
 
   return (cTilde, z, h);
 }
 
-Uint8List w1Encode(ParameterSet parameters, List<List<int>> w) {
-  final List<int> w1Tilde = List.empty(growable: true);
+Uint8List w1Encode(ParameterSet parameters, List<Int32List> w) {
+  final Uint8List w1Tilde = Uint8List(0);
   for (int i = 0; i < w.length; i++) {
     final int b = ((parameters.q() - 1) ~/ (2 * parameters.gamma2())) - 1;
     w1Tilde.addAll(simpleBitPack(w[i], b));
   }
 
-  return Uint8List.fromList(w1Tilde);
+  return w1Tilde;
 }
 
-Uint8List bitPack(List<int> w, int a, int b) {
-  final List<int> z = List<int>.empty(growable: true);
+Uint8List bitPack(Int32List w, int a, int b) {
+  final List<int> z = List.empty(growable: true);
 
   for (int i = 0; i < 256; i++) {
     z.addAll(integerToBits(b - w[i], (a + b).bitLength));
   }
 
-  return bitsToBytes(z);
+  return bitsToBytes(Uint8List.fromList(z));
 }
 
-List<int> bitUnpack(Uint8List v, int a, int b) {
+Int32List bitUnpack(Uint8List v, int a, int b) {
   final int c = (a + b).bitLength;
-  final List<int> z = bytesToBits(v);
+  final Uint8List z = bytesToBits(v);
 
-  final List<int> w = List.generate(256, (int i) {
+  final Int32List w = Int32List.fromList(List.generate(256, (int i) {
     final int offset = i * c;
     final int limit = offset + c;
     return b - bitsToInteger(z.sublist(offset, limit), c);
-  }, growable: false);
+  }, growable: false));
 
   return w;
 }
 
-Uint8List simpleBitPack(List<int> w, int b) {
-  final List<int> z = List<int>.empty(growable: true);
+Uint8List simpleBitPack(Int32List w, int b) {
+  final Uint8List z = Uint8List((b.bitLength * 256) ~/ 8);
   for (int i = 0; i < 256; i++) {
-    z.addAll(integerToBits(w[i], b.bitLength));
+    z.setAll(0, integerToBits(w[i], b.bitLength));
   }
 
   return bitsToBytes(z);
 }
 
-List<int> simpleBitUnpack(Uint8List v, int b) {
+Int32List simpleBitUnpack(Uint8List v, int b) {
   final int c = b.bitLength;
-  final List<int> z = bytesToBits(v);
+  final Uint8List z = bytesToBits(v);
 
-  final List<int> w = List.generate(256, (int i) {
+  final Int32List w = Int32List.fromList(List.generate(256, (int i) {
     final offset = i * c;
     final limit = offset + c;
     return bitsToInteger(z.sublist(offset, limit), c);
-  }, growable: false);
+  }, growable: false));
 
   return w;
 }
 
-Uint8List hintBitPack(ParameterSet parameters, List<List<int>> h) {
-  final List<int> y = List.generate(
-      parameters.omega() + parameters.k(), (int _) => 0,
-      growable: false);
+Uint8List hintBitPack(ParameterSet parameters, List<Int32List> h) {
+  final Int32List y = Int32List(
+      parameters.omega() + parameters.k());
   int index = 0;
 
   for (int i = 0; i < parameters.k(); i++) {
@@ -321,12 +316,12 @@ Uint8List hintBitPack(ParameterSet parameters, List<List<int>> h) {
   return Uint8List.fromList(y);
 }
 
-List<List<int>>? hintBitUnpack(ParameterSet parameters, Uint8List y) {
+List<Int32List>? hintBitUnpack(ParameterSet parameters, Uint8List y) {
   int index = 0;
   final int omega = parameters.omega();
 
-  final List<List<int>> h = List.generate(parameters.k(), (int i) {
-    return List.generate(256, (int i) => 0);
+  final List<Int32List> h = List.generate(parameters.k(), (int i) {
+    return Int32List(256);
   }, growable: false);
 
   for (int i = 0; i < parameters.k(); i++) {

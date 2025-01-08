@@ -37,7 +37,7 @@ bool testMKDSAKAT(ParameterSet params, List<Map<String, String>> katVectors) {
     final ctx = Uint8List.fromList(HEX.decode(vector['Context']!));
 
     final sig = dsa.signDeterministically(sk, message, ctx);
-    final List<int> sm = List.generate(sig.length, (int i) => sig[i]);
+    final Int32List sm = Int32List.fromList(sig);
     sm.addAll(message);
     
     if (vector['Signature'] != HEX.encode(Uint8List.fromList(sm))) {
