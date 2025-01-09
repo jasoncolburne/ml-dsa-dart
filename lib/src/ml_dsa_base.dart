@@ -177,9 +177,7 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final Uint8List rnd = Uint8List.fromList(
-      List.generate(seedLength, (int _) => 0, growable: false),
-    );
+    final Uint8List rnd = Uint8List(seedLength);
 
     final Uint8List mPrime = concatenateBytes([
       integerToBytes(0, 1),
@@ -271,7 +269,7 @@ class MLDSA {
 
     int k = 0;
     List<Int32List>? z;
-    List<Int32List>? h;
+    List<Uint8List>? h;
     Uint8List cTilde = Uint8List(0);
 
     while (z == null && h == null) {
@@ -290,6 +288,7 @@ class MLDSA {
         mu,
         w1Encode(parameters, w1),
       ]);
+
       final Int32List c = sampleInBall(parameters, cTilde);
       final Int32List cHat = ntt(parameters, c);
 

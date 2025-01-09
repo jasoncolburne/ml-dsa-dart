@@ -39,10 +39,10 @@ bool testMKDSAKAT(ParameterSet params, List<Map<String, String>> katVectors) {
     final sig = dsa.signDeterministically(sk, message, ctx);
     final Uint8List sm = Uint8List(sig.length + message.length);
     sm.setRange(0, sig.length, sig);
-    sm.setRange(sig.length, sig.length + message.length, message);
+    sm.setRange(sig.length, sm.length, message);
     
-    if (vector['Signature'] != HEX.encode(Uint8List.fromList(sm))) {
-      print('bad sm:');
+    if (vector['Signature'] != HEX.encode(sm)) {
+      print('bad sm (${sig.length}/${sm.length}):');
       print(HEX.encode(sm));
       print('expected:');
       print(vector['Signature']);
@@ -125,17 +125,17 @@ void main() {
       expect(testMKDSAKAT(params, ML_DSA_44_TestVectors), true);
     });
 
-    test('ML-DSA-65', skip: true, () {
+    test('ML-DSA-65', () {
       final params = MLDSA65Parameters();
       expect(testMKDSAKAT(params, ML_DSA_65_TestVectors), true);
     });
 
-    test('ML-DSA-87', skip: true, () {
+    test('ML-DSA-87', () {
       final params = MLDSA87Parameters();
       expect(testMKDSAKAT(params, ML_DSA_87_TestVectors), true);
     });
   });
-  group('Round Trip: ', skip: true, () {
+  group('Round Trip: ', () {
     test('ML-DSA-44', () {
       final params = MLDSA44Parameters();
       expect(testMLDSARoundTrip(params, 2560, 1312, 2420), true);

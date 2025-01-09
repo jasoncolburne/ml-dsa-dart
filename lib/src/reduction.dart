@@ -99,10 +99,10 @@ int makeHint(ParameterSet parameters, int z, int r) {
   return (r1 != v1) ? 1 : 0;
 }
 
-List<Int32List> vectorMakeHint(
+List<Uint8List> vectorMakeHint(
     ParameterSet parameters, List<Int32List> ct0Neg, List<Int32List> wPrime) {
   return List.generate(ct0Neg.length, (int i) {
-    return Int32List.fromList(List.generate(ct0Neg[i].length, (int j) {
+    return Uint8List.fromList(List.generate(ct0Neg[i].length, (int j) {
       return makeHint(parameters, ct0Neg[i][j], wPrime[i][j]);
     }, growable: false));
   }, growable: false);
@@ -132,7 +132,7 @@ List<Int32List> vectorUseHint(
   }, growable: false);
 }
 
-int onesInH(List<Int32List> h) {
+int onesInH(List<Uint8List> h) {
   return h.expand((row) => row).reduce((int a, int b) => a + b);
 }
 

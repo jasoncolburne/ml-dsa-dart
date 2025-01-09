@@ -158,7 +158,12 @@ Uint8List skEncode(
   final int s2EncodedLength = s2.length * etaBlockLength;
   final int tEncodedLength = t.length * xyBlockLength;
 
-  final int length = rho.length + kappa.length + tr.length + s1EncodedLength + s2EncodedLength + tEncodedLength;
+  final int length = rho.length +
+      kappa.length +
+      tr.length +
+      s1EncodedLength +
+      s2EncodedLength +
+      tEncodedLength;
 
   final Uint8List sk = Uint8List(length);
 
@@ -245,19 +250,33 @@ Uint8List skEncode(
   return (rho, kappa, tr, s1, s2, t);
 }
 
-Uint8List sigEncode(ParameterSet parameters, Uint8List cTilde,
-    List<Int32List> z, List<Int32List> h) {
-  final List<int> sigma = List.from(cTilde);
-
+Uint8List sigEncode(
+  ParameterSet parameters,
+  Uint8List cTilde,
+  List<Int32List> z,
+  List<Uint8List> h,
+) {
   final int gamma1 = parameters.gamma1();
+  final int bitLength = (gamma1 + gamma1 - 1).bitLength;
+  final int blockLength = bitLength * 32;
+  final int length = cTilde.length +
+      blockLength * parameters.l() +
+      (parameters.omega() + parameters.k());
+  final Uint8List sigma = Uint8List(length);
+  sigma.setRange(0, cTilde.length, cTilde);
+
+  int offset = cTilde.length;
+  int limit = offset;
+
   for (int i = 0; i < parameters.l(); i++) {
-    sigma.addAll(bitPack(z[i], gamma1 - 1, gamma1));
+    limit += blockLength;
+    sigma.setRange(offset, limit, bitPack(z[i], gamma1 - 1, gamma1));
+    offset += blockLength;
   }
 
-  final Uint8List hints = hintBitPack(parameters, h);
-  sigma.addAll(hints);
+  sigma.setRange(offset, length, hintBitPack(parameters, h));
 
-  return Uint8List.fromList(sigma);
+  return sigma;
 }
 
 (Uint8List, List<Int32List>, List<Int32List>?) sigDecode(
@@ -284,11 +303,12 @@ Uint8List sigEncode(ParameterSet parameters, Uint8List cTilde,
 
 Uint8List w1Encode(ParameterSet parameters, List<Int32List> w) {
   final int b = ((parameters.q() - 1) ~/ (2 * parameters.gamma2())) - 1;
-  final Uint8List w1Tilde = Uint8List(b * 32 * w.length);
+  final int bitLength = b.bitLength;
+  final int rangeLength = (256 * bitLength) ~/ 8;
+  final Uint8List w1Tilde = Uint8List(bitLength * 32 * w.length);
 
   int offset = 0;
   int limit = 0;
-  final int rangeLength = (256 * b.bitLength) ~/ 8;
 
   for (int i = 0; i < w.length; i++) {
     limit += rangeLength;
@@ -352,7 +372,7 @@ Int32List simpleBitUnpack(Uint8List v, int b) {
   return w;
 }
 
-Uint8List hintBitPack(ParameterSet parameters, List<Int32List> h) {
+Uint8List hintBitPack(ParameterSet parameters, List<Uint8List> h) {
   final Int32List y = Int32List(parameters.omega() + parameters.k());
   int index = 0;
 
@@ -408,7 +428,8 @@ List<Int32List>? hintBitUnpack(ParameterSet parameters, Uint8List y) {
 }
 
 Uint8List concatenateBytes(List<Uint8List> args) {
-  final int length = args.map((Uint8List arg) => arg.length).reduce((int a, int b) => a + b);
+  final int length =
+      args.map((Uint8List arg) => arg.length).reduce((int a, int b) => a + b);
   final Uint8List result = Uint8List(length);
 
   int offset = 0;
