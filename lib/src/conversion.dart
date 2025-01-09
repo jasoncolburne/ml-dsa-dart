@@ -348,10 +348,14 @@ Int32List bitUnpack(Uint8List v, int a, int b) {
   final int c = (a + b).bitLength;
   final Uint8List z = bytesToBits(v);
 
+  int offset = 0;
+  int limit = 0;
+
   final Int32List w = Int32List.fromList(List.generate(256, (int i) {
-    final int offset = i * c;
-    final int limit = offset + c;
-    return b - bitsToInteger(z.sublist(offset, limit), c);
+    limit += c;
+    final int x = b - bitsToInteger(z.sublist(offset, limit), c);
+    offset += c;
+    return x;
   }, growable: false));
 
   return w;
@@ -360,12 +364,14 @@ Int32List bitUnpack(Uint8List v, int a, int b) {
 Uint8List simpleBitPack(Int32List w, int b) {
   final int bitLength = b.bitLength;
   final Uint8List z = Uint8List(bitLength * 256); // (b.bitLength * 256) ~/ 8
+
   int offset = 0;
-  int limit = bitLength;
+  int limit = 0;
+
   for (int i = 0; i < 256; i++) {
+    limit += bitLength;
     z.setRange(offset, limit, integerToBits(w[i], bitLength));
     offset += bitLength;
-    limit += bitLength;
   }
 
   return bitsToBytes(z);
@@ -375,10 +381,14 @@ Int32List simpleBitUnpack(Uint8List v, int b) {
   final int c = b.bitLength;
   final Uint8List z = bytesToBits(v);
 
+  int offset = 0;
+  int limit = 0;
+
   final Int32List w = Int32List.fromList(List.generate(256, (int i) {
-    final offset = i * c;
-    final limit = offset + c;
-    return bitsToInteger(z.sublist(offset, limit), c);
+    limit += c;
+    final int x = bitsToInteger(z.sublist(offset, limit), c);
+    offset += c;
+    return x;
   }, growable: false));
 
   return w;
@@ -406,9 +416,11 @@ List<Uint8List>? hintBitUnpack(ParameterSet parameters, Uint8List y) {
   int index = 0;
   final int omega = parameters.omega();
 
-  final List<Uint8List> h = List.generate(parameters.k(), (int i) {
-    return Uint8List(256);
-  }, growable: false);
+  final List<Uint8List> h = List.generate(
+    parameters.k(),
+    (int i) => Uint8List(256),
+    growable: false,
+  );
 
   for (int i = 0; i < parameters.k(); i++) {
     final int yOmegaI = y[omega + i];
