@@ -342,7 +342,7 @@ class MLDSA {
 
   bool _verify(Uint8List pk, Uint8List mPrime, Uint8List sigma) {
     final (Uint8List rho, List<Int32List> t1) = pkDecode(parameters, pk);
-    final (Uint8List cTilde, List<Int32List> z, List<Int32List>? h) =
+    final (Uint8List cTilde, List<Int32List> z, List<Uint8List>? h) =
         sigDecode(parameters, sigma);
 
     if (h == null) {

@@ -124,7 +124,7 @@ int useHint(ParameterSet parameters, int h, int r) {
 }
 
 List<Int32List> vectorUseHint(
-    ParameterSet parameters, List<Int32List> v, List<Int32List> h) {
+    ParameterSet parameters, List<Int32List> v, List<Uint8List> h) {
   return List.generate(parameters.k(), (int i) {
     return Int32List.fromList(List.generate(v[i].length, (int j) {
       return useHint(parameters, h[i][j], v[i][j]);
