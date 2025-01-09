@@ -136,15 +136,15 @@ class MLDSA87VerifyBenchmark extends VerifyBenchmark {
 }
 
 void main() {
-  MLDSA44GenerateBenchmark().report();
-  MLDSA65GenerateBenchmark().report();
-  MLDSA87GenerateBenchmark().report();
+  // MLDSA44GenerateBenchmark().report();
+  // MLDSA65GenerateBenchmark().report();
+  // MLDSA87GenerateBenchmark().report();
 
-  MLDSA44SignBenchmark().report();
-  MLDSA65SignBenchmark().report();
-  MLDSA87SignBenchmark().report();
+  // MLDSA44SignBenchmark().report();
+  // MLDSA65SignBenchmark().report();
+  // MLDSA87SignBenchmark().report();
 
-  MLDSA44VerifyBenchmark().report();
-  MLDSA65VerifyBenchmark().report();
-  MLDSA87VerifyBenchmark().report();
+  // MLDSA44VerifyBenchmark().report();
+  // MLDSA65VerifyBenchmark().report();
+  // MLDSA87VerifyBenchmark().report();
 }

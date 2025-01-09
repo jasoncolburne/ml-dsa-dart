@@ -38,12 +38,16 @@ List<Int32List> vectorModQSymmetric(List<Int32List> z, int q) {
 
 (List<Int32List>, List<Int32List>) vectorPower2Round(
     ParameterSet parameters, List<Int32List> t) {
-  final List<Int32List> t0 = List.filled(parameters.k(),
-      Int32List(256),
-      growable: false,);
-  final List<Int32List> t1 = List.filled(parameters.k(),
-      Int32List(256),
-      growable: false,);
+  final List<Int32List> t0 = List.generate(
+    parameters.k(),
+    (_) => Int32List(256),
+    growable: false,
+  );
+  final List<Int32List> t1 = List.generate(
+    parameters.k(),
+    (_) => Int32List(256),
+    growable: false,
+  );
 
   for (int j = 0; j < parameters.k(); j++) {
     for (int i = 0; i < 256; i++) {

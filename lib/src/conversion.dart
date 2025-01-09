@@ -36,9 +36,15 @@ Uint8List bitsToBytes(Uint8List y) {
   final alpha = y.length;
   final Uint8List z = Uint8List((alpha + 7) ~/ 8);
 
-  for (int i = 0; i < alpha; i++) {
-    if (y[i] == 1) {
-      z[i ~/ 8] += 1 << modQ(i, 8);
+  for (int i = 0; i < alpha; i += 8) {
+    final int j = i ~/ 8;
+    int mask = 0x01;
+
+    for (int k = i; k < i + 8; k++) {
+      if (y[k] == 1) {
+        z[j] |= mask;
+      }
+      mask <<= 1;
     }
   }
 
@@ -99,13 +105,22 @@ Uint8List integerToBytes(int x, int alpha) {
 
 Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<Int32List> t) {
   final int width = (parameters.q() - 1).bitLength - parameters.d();
-  final List<int> pk = List.from(rho);
+  final int rhoLength = rho.length;
+  final int rangeLength = (width * 256) ~/ 8;
+  final int b = (1 << width) - 1;
+  final Uint8List pk = Uint8List(rhoLength + rangeLength * parameters.k());
+  pk.setRange(0, rhoLength, rho);
 
+  int offset = rhoLength;
+  int limit = rhoLength;
   for (int i = 0; i < parameters.k(); i++) {
-    pk.addAll(simpleBitPack(t[i], (1 << width) - 1));
+    final bytes = simpleBitPack(t[i], b);
+    limit += rangeLength;
+    pk.setRange(offset, limit, bytes);
+    offset += rangeLength;
   }
 
-  return Uint8List.fromList(pk);
+  return pk;
 }
 
 (Uint8List, List<Int32List>) pkDecode(ParameterSet parameters, Uint8List pk) {
@@ -132,28 +147,53 @@ Uint8List skEncode(
   List<Int32List> s2,
   List<Int32List> t,
 ) {
-  final List<int> sk = List.from(rho);
-  sk.addAll(kappa);
-  sk.addAll(tr);
-
   final int eta = parameters.eta();
-
-  for (int i = 0; i < parameters.l(); i++) {
-    sk.addAll(bitPack(s1[i], eta, eta));
-  }
-
-  for (int i = 0; i < parameters.k(); i++) {
-    sk.addAll(bitPack(s2[i], eta, eta));
-  }
-
   final int x = 1 << (parameters.d() - 1);
   final int y = x - 1;
 
-  for (int i = 0; i < parameters.k(); i++) {
-    sk.addAll(bitPack(t[i], y, x));
+  final int etaBlockLength = (eta + eta).bitLength * 32;
+  final int xyBlockLength = (x + y).bitLength * 32;
+
+  final int s1EncodedLength = s1.length * etaBlockLength;
+  final int s2EncodedLength = s2.length * etaBlockLength;
+  final int tEncodedLength = t.length * xyBlockLength;
+
+  final int length = rho.length + kappa.length + tr.length + s1EncodedLength + s2EncodedLength + tEncodedLength;
+
+  final Uint8List sk = Uint8List(length);
+
+  int offset = 0;
+  int limit = rho.length;
+  sk.setRange(offset, limit, rho);
+
+  offset += rho.length;
+  limit += kappa.length;
+  sk.setRange(offset, limit, kappa);
+
+  offset += kappa.length;
+  limit += tr.length;
+  sk.setRange(offset, limit, tr);
+
+  offset += tr.length;
+  for (int i = 0; i < parameters.l(); i++) {
+    limit += etaBlockLength;
+    sk.setRange(offset, limit, bitPack(s1[i], eta, eta));
+    offset += etaBlockLength;
   }
 
-  return Uint8List.fromList(sk);
+  for (int i = 0; i < parameters.k(); i++) {
+    limit += etaBlockLength;
+    sk.setRange(offset, limit, bitPack(s2[i], eta, eta));
+    offset += etaBlockLength;
+  }
+
+  for (int i = 0; i < parameters.k(); i++) {
+    limit += xyBlockLength;
+    sk.setRange(offset, limit, bitPack(t[i], y, x));
+    offset += xyBlockLength;
+  }
+
+  return sk;
 }
 
 // this function uses named returns, brace yourself
@@ -243,23 +283,33 @@ Uint8List sigEncode(ParameterSet parameters, Uint8List cTilde,
 }
 
 Uint8List w1Encode(ParameterSet parameters, List<Int32List> w) {
-  final Uint8List w1Tilde = Uint8List(0);
+  final int b = ((parameters.q() - 1) ~/ (2 * parameters.gamma2())) - 1;
+  final Uint8List w1Tilde = Uint8List(b * 32 * w.length);
+
+  int offset = 0;
+  int limit = 0;
+  final int rangeLength = (256 * b.bitLength) ~/ 8;
+
   for (int i = 0; i < w.length; i++) {
-    final int b = ((parameters.q() - 1) ~/ (2 * parameters.gamma2())) - 1;
-    w1Tilde.addAll(simpleBitPack(w[i], b));
+    limit += rangeLength;
+    w1Tilde.setRange(offset, limit, simpleBitPack(w[i], b));
+    offset += rangeLength;
   }
 
   return w1Tilde;
 }
 
 Uint8List bitPack(Int32List w, int a, int b) {
-  final List<int> z = List.empty(growable: true);
+  final int bitLength = (a + b).bitLength;
+  final Uint8List z = Uint8List(bitLength * 256);
 
   for (int i = 0; i < 256; i++) {
-    z.addAll(integerToBits(b - w[i], (a + b).bitLength));
+    final offset = i * bitLength;
+    final limit = offset + bitLength;
+    z.setRange(offset, limit, integerToBits(b - w[i], bitLength));
   }
 
-  return bitsToBytes(Uint8List.fromList(z));
+  return bitsToBytes(z);
 }
 
 Int32List bitUnpack(Uint8List v, int a, int b) {
@@ -276,9 +326,14 @@ Int32List bitUnpack(Uint8List v, int a, int b) {
 }
 
 Uint8List simpleBitPack(Int32List w, int b) {
-  final Uint8List z = Uint8List((b.bitLength * 256) ~/ 8);
+  final int bitLength = b.bitLength;
+  final Uint8List z = Uint8List(bitLength * 256); // (b.bitLength * 256) ~/ 8
+  int offset = 0;
+  int limit = bitLength;
   for (int i = 0; i < 256; i++) {
-    z.setAll(0, integerToBits(w[i], b.bitLength));
+    z.setRange(offset, limit, integerToBits(w[i], bitLength));
+    offset += bitLength;
+    limit += bitLength;
   }
 
   return bitsToBytes(z);
@@ -298,8 +353,7 @@ Int32List simpleBitUnpack(Uint8List v, int b) {
 }
 
 Uint8List hintBitPack(ParameterSet parameters, List<Int32List> h) {
-  final Int32List y = Int32List(
-      parameters.omega() + parameters.k());
+  final Int32List y = Int32List(parameters.omega() + parameters.k());
   int index = 0;
 
   for (int i = 0; i < parameters.k(); i++) {
@@ -354,13 +408,19 @@ List<Int32List>? hintBitUnpack(ParameterSet parameters, Uint8List y) {
 }
 
 Uint8List concatenateBytes(List<Uint8List> args) {
-  final List<int> result = List.empty(growable: true);
+  final int length = args.map((Uint8List arg) => arg.length).reduce((int a, int b) => a + b);
+  final Uint8List result = Uint8List(length);
+
+  int offset = 0;
+  int limit = 0;
 
   for (final arg in args) {
-    result.addAll(arg);
+    limit += arg.length;
+    result.setRange(offset, limit, arg);
+    offset += arg.length;
   }
 
-  return Uint8List.fromList(result);
+  return result;
 }
 
 Uint8List concatenateBytesAndSHAKE256(int outputLength, List<Uint8List> args) {

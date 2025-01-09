@@ -5,7 +5,9 @@ import 'reduction.dart';
 import 'zetas.dart';
 
 Int32List ntt(ParameterSet parameters, Int32List w) {
-  final Int32List wHat = Int32List.fromList(List.generate(256, (int i) => w[i], growable: false),);
+  final Int32List wHat = Int32List.fromList(
+    List.generate(256, (int i) => w[i], growable: false),
+  );
 
   int m = 0;
   final int q = parameters.q();
@@ -27,7 +29,9 @@ Int32List ntt(ParameterSet parameters, Int32List w) {
 }
 
 Int32List nttInverse(ParameterSet parameters, Int32List wHat) {
-  final Int32List w = Int32List.fromList(List.generate(256, (int i) => wHat[i], growable: false),);
+  final Int32List w = Int32List.fromList(
+    List.generate(256, (int i) => wHat[i], growable: false),
+  );
 
   int m = 256;
   int len = 1;
@@ -60,11 +64,15 @@ Int32List nttInverse(ParameterSet parameters, Int32List wHat) {
 }
 
 Int32List addNtt(ParameterSet parameters, Int32List aHat, Int32List bHat) {
-  return Int32List.fromList(List.generate(256, (int i) => modQ(aHat[i] + bHat[i], parameters.q())),);
+  return Int32List.fromList(
+    List.generate(256, (int i) => modQ(aHat[i] + bHat[i], parameters.q())),
+  );
 }
 
 Int32List subtractNtt(ParameterSet parameters, aHat, Int32List bHat) {
-  return Int32List.fromList(List.generate(256, (int i) => modQ(aHat[i] - bHat[i], parameters.q())),);
+  return Int32List.fromList(
+    List.generate(256, (int i) => modQ(aHat[i] - bHat[i], parameters.q())),
+  );
 }
 
 Int32List multiplyNtt(ParameterSet parameters, aHat, Int32List bHat) {
@@ -105,9 +113,11 @@ List<Int32List> matrixVectorNtt(
   List<List<Int32List>> MHat,
   List<Int32List> vHat,
 ) {
-  final List<Int32List> wHat = List.filled(
+  final List<Int32List> wHat = List.generate(
     parameters.k(),
-    Int32List(256), growable: false,);
+    (_) => Int32List(256),
+    growable: false,
+  );
 
   for (int i = 0; i < parameters.k(); i++) {
     for (int j = 0; j < parameters.l(); j++) {
