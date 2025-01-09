@@ -21,13 +21,15 @@ int modQSymmetric(int n, int q) {
 }
 
 List<Int32List> vectorModQSymmetric(List<Int32List> z, int q) {
-  return List.generate(z.length, (int i) {
-    return Int32List.fromList(List.generate(
+  return List.generate(
+    z.length,
+    (int i) => Int32List.fromList(List.generate(
       z[i].length,
       (int j) => modQSymmetric(z[i][j], q),
       growable: false,
-    ));
-  }, growable: false);
+    )),
+    growable: false,
+  );
 }
 
 (int, int) power2Round(ParameterSet parameters, int r) {
@@ -82,13 +84,15 @@ int highBits(ParameterSet parameters, int r) {
 }
 
 List<Int32List> vectorHighBits(ParameterSet parameters, List<Int32List> v) {
-  return List.generate(parameters.k(), (int j) {
-    return Int32List.fromList(List.generate(
+  return List.generate(
+    parameters.k(),
+    (int j) => Int32List.fromList(List.generate(
       256,
       (int i) => highBits(parameters, v[j][i]),
       growable: false,
-    ));
-  }, growable: false);
+    )),
+    growable: false,
+  );
 }
 
 int lowBits(ParameterSet parameters, int r) {
@@ -104,14 +108,19 @@ int makeHint(ParameterSet parameters, int z, int r) {
 }
 
 List<Uint8List> vectorMakeHint(
-    ParameterSet parameters, List<Int32List> ct0Neg, List<Int32List> wPrime) {
-  return List.generate(ct0Neg.length, (int i) {
-    return Uint8List.fromList(List.generate(
+  ParameterSet parameters,
+  List<Int32List> ct0Neg,
+  List<Int32List> wPrime,
+) {
+  return List.generate(
+    ct0Neg.length,
+    (int i) => Uint8List.fromList(List.generate(
       ct0Neg[i].length,
       (int j) => makeHint(parameters, ct0Neg[i][j], wPrime[i][j]),
       growable: false,
-    ));
-  }, growable: false);
+    )),
+    growable: false,
+  );
 }
 
 int useHint(ParameterSet parameters, int h, int r) {
@@ -130,12 +139,19 @@ int useHint(ParameterSet parameters, int h, int r) {
 }
 
 List<Int32List> vectorUseHint(
-    ParameterSet parameters, List<Int32List> v, List<Uint8List> h) {
-  return List.generate(parameters.k(), (int i) {
-    return Int32List.fromList(List.generate(v[i].length, (int j) {
-      return useHint(parameters, h[i][j], v[i][j]);
-    }, growable: false));
-  }, growable: false);
+  ParameterSet parameters,
+  List<Int32List> v,
+  List<Uint8List> h,
+) {
+  return List.generate(
+    parameters.k(),
+    (int i) => Int32List.fromList(List.generate(
+      v[i].length,
+      (int j) => useHint(parameters, h[i][j], v[i][j]),
+      growable: false,
+    )),
+    growable: false,
+  );
 }
 
 int onesInH(List<Uint8List> h) {

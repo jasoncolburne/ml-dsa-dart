@@ -10,14 +10,15 @@ List<List<Int32List>> expandA(ParameterSet parameters, Uint8List rho) {
   final Uint8List rhoPrime = Uint8List(rhoLength + 2);
   rhoPrime.setRange(0, rhoLength, rho);
 
-  return List.generate(parameters.k(), (int r) {
-    return List.generate(parameters.l(), (int s) {
+  return List.generate(
+    parameters.k(),
+    (int r) => List.generate(parameters.l(), (int s) {
       rhoPrime[rhoLength] = integerToBytes(s, 1)[0];
       rhoPrime[rhoLength + 1] = integerToBytes(r, 1)[0];
-
       return rejNttPoly(parameters, Uint8List.fromList(rhoPrime));
-    });
-  });
+    }),
+    growable: false,
+  );
 }
 
 (List<Int32List>, List<Int32List>) expandS(
@@ -26,10 +27,17 @@ List<List<Int32List>> expandA(ParameterSet parameters, Uint8List rho) {
   final Uint8List rhoPrime = Uint8List(rhoLength + 2);
   rhoPrime.setRange(0, rhoLength, rho);
 
-  final List<Int32List> s1 =
-      List.generate(parameters.l(), (_) => Int32List(0), growable: false);
-  final List<Int32List> s2 =
-      List.generate(parameters.k(), (_) => Int32List(0), growable: false);
+  final List<Int32List> s1 = List.generate(
+    parameters.l(),
+    (_) => Int32List(0),
+    growable: false,
+  );
+
+  final List<Int32List> s2 = List.generate(
+    parameters.k(),
+    (_) => Int32List(0),
+    growable: false,
+  );
 
   for (int r = 0; r < parameters.l(); r++) {
     final Uint8List bytes = integerToBytes(r, 2);

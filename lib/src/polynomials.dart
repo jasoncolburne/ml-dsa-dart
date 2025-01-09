@@ -84,37 +84,49 @@ Int32List rejBoundedPoly(ParameterSet parameters, Uint8List rho) {
 }
 
 Int32List addPolynomials(ParameterSet parameters, Int32List a, Int32List b) {
-  return Int32List.fromList(List.generate(256, (int i) {
-    return modQSymmetric(a[i] + b[i], parameters.q());
-  }, growable: false));
+  return Int32List.fromList(List.generate(
+    256,
+    (int i) => modQSymmetric(a[i] + b[i], parameters.q()),
+    growable: false,
+  ));
 }
 
 Int32List subtractPolynomials(
     ParameterSet parameters, Int32List a, Int32List b) {
-  return Int32List.fromList(List.generate(256, (int i) {
-    return modQSymmetric(a[i] - b[i], parameters.q());
-  }, growable: false));
+  return Int32List.fromList(List.generate(
+    256,
+    (int i) => modQSymmetric(a[i] - b[i], parameters.q()),
+    growable: false,
+  ));
 }
 
 List<Int32List> vectorAddPolynomials(
     ParameterSet parameters, List<Int32List> a, List<Int32List> b) {
-  return List.generate(a.length, (int i) {
-    return addPolynomials(parameters, a[i], b[i]);
-  }, growable: false);
+  return List.generate(
+    a.length,
+    (int i) => addPolynomials(parameters, a[i], b[i]),
+    growable: false,
+  );
 }
 
 List<Int32List> vectorSubtractPolynomials(
     ParameterSet parameters, List<Int32List> a, List<Int32List> b) {
-  return List.generate(a.length, (int i) {
-    return subtractPolynomials(parameters, a[i], b[i]);
-  }, growable: false);
+  return List.generate(
+    a.length,
+    (int i) => subtractPolynomials(parameters, a[i], b[i]),
+    growable: false,
+  );
 }
 
 List<Int32List> scalarVectorMultiply(
     ParameterSet parameters, int c, List<Int32List> v) {
-  return List.generate(v.length, (int i) {
-    return Int32List.fromList(List.generate(v[i].length, (int j) {
-      return modQSymmetric(c * v[i][j], parameters.q());
-    }));
-  });
+  return List.generate(
+    v.length,
+    (int i) => Int32List.fromList(List.generate(
+      v[i].length,
+      (int j) => modQSymmetric(c * v[i][j], parameters.q()),
+      growable: false,
+    )),
+    growable: false,
+  );
 }
