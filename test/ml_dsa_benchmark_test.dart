@@ -20,11 +20,15 @@ class MLDSABenchmark extends BenchmarkBase {
   MLDSABenchmark(super.title);
 
   @override
+  void exercise() {
+    run();
+  }
+
+  @override
   void report() {
-    var microseconds = measure();
-    var secondsPerRun = microseconds / 1000000;
-    var operations = 1 / secondsPerRun;
-    print('$name: ${microseconds.toStringAsFixed(3)} µs/op ${operations.toStringAsFixed(3)} ops/s');
+    var microsecondsPerRun = measure();
+    var operationsPerSecond = 1 / (microsecondsPerRun * 0.000001);
+    print('$name: ${microsecondsPerRun.toStringAsFixed(3)} µs/op ${operationsPerSecond.toStringAsFixed(3)} ops/s');
   }
 }
 
