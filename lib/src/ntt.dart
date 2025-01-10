@@ -99,8 +99,11 @@ List<Int32List> vectorNttInverse(
   ParameterSet parameters,
   List<Int32List> vHat,
 ) {
-  return List.generate(vHat.length, (int i) => nttInverse(parameters, vHat[i]),
-      growable: false);
+  return List.generate(
+    vHat.length,
+    (int i) => nttInverse(parameters, vHat[i]),
+    growable: false,
+  );
 }
 
 List<Int32List> subtractVectorNtt(

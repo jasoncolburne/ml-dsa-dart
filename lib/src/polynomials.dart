@@ -122,11 +122,13 @@ List<Int32List> scalarVectorMultiply(
     ParameterSet parameters, int c, List<Int32List> v) {
   return List.generate(
     v.length,
-    (int i) => Int32List.fromList(List.generate(
-      v[i].length,
-      (int j) => modQSymmetric(c * v[i][j], parameters.q()),
-      growable: false,
-    )),
+    (int i) => Int32List.fromList(
+      List.generate(
+        v[i].length,
+        (int j) => modQSymmetric(c * v[i][j], parameters.q()),
+        growable: false,
+      ),
+    ),
     growable: false,
   );
 }
