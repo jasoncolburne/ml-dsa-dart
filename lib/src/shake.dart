@@ -20,4 +20,8 @@ class IncrementalSHAKE {
 
     return output;
   }
+
+  void reset() {
+    _shake.reset();
+  }
 }

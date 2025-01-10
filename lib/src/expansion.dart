@@ -63,14 +63,12 @@ List<Int32List> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
 
   final int c = 1 + (parameters.gamma1() - 1).bitLength;
 
+  IncrementalSHAKE hasher = IncrementalSHAKE(true);
   return List.generate(parameters.l(), (int r) {
-    final Uint8List bytes = integerToBytes(mu + r, 2);
-    rhoPrime[rhoLength] = bytes[0];
-    rhoPrime[rhoLength + 1] = bytes[1];
-
-    IncrementalSHAKE hasher = IncrementalSHAKE(true);
+    rhoPrime.setRange(rhoLength, rhoLength + 2, integerToBytes(mu + r, 2));
     hasher.absorb(rhoPrime);
     final Uint8List v = hasher.squeeze(32 * c);
+    hasher.reset();
     return bitUnpack(v, parameters.gamma1() - 1, parameters.gamma1());
   });
 }
