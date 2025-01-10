@@ -36,7 +36,6 @@ class GenerateBenchmark extends BenchmarkBase {
 
   @override
   void exercise() {
-    // do at least 250 trials
     for (int i = 0; i < trialsPerRun; i ++) {
       run();
     }
@@ -51,15 +50,15 @@ class GenerateBenchmark extends BenchmarkBase {
 }
 
 class MLDSA44GenerateBenchmark extends GenerateBenchmark {
-  MLDSA44GenerateBenchmark() : super('44-Generate', params: MLDSA44Parameters(), trialsPerRun: 250);
+  MLDSA44GenerateBenchmark() : super('44-Generate', params: MLDSA44Parameters(), trialsPerRun: 200);
 }
 
 class MLDSA65GenerateBenchmark extends GenerateBenchmark {
-  MLDSA65GenerateBenchmark() : super('65-Generate', params: MLDSA65Parameters(), trialsPerRun: 250);
+  MLDSA65GenerateBenchmark() : super('65-Generate', params: MLDSA65Parameters(), trialsPerRun: 200);
 }
 
 class MLDSA87GenerateBenchmark extends GenerateBenchmark {
-  MLDSA87GenerateBenchmark() : super('87-Generate', params: MLDSA87Parameters(), trialsPerRun: 250);
+  MLDSA87GenerateBenchmark() : super('87-Generate', params: MLDSA87Parameters(), trialsPerRun: 200);
 }
 
 class SignBenchmark extends BenchmarkBase {
@@ -90,7 +89,6 @@ class SignBenchmark extends BenchmarkBase {
 
   @override
   void exercise() {
-    // do at least 250 trials
     for (int i = 0; i < trialsPerRun; i ++) {
       run();
     }
@@ -105,15 +103,15 @@ class SignBenchmark extends BenchmarkBase {
 }
 
 class MLDSA44SignBenchmark extends SignBenchmark {
-  MLDSA44SignBenchmark() : super('44-Sign', params: MLDSA44Parameters(), trialsPerRun: 250);
+  MLDSA44SignBenchmark() : super('44-Sign', params: MLDSA44Parameters(), trialsPerRun: 200);
 }
 
 class MLDSA65SignBenchmark extends SignBenchmark {
-  MLDSA65SignBenchmark() : super('65-Sign', params: MLDSA65Parameters(), trialsPerRun: 250);
+  MLDSA65SignBenchmark() : super('65-Sign', params: MLDSA65Parameters(), trialsPerRun: 200);
 }
 
 class MLDSA87SignBenchmark extends SignBenchmark {
-  MLDSA87SignBenchmark() : super('87-Sign', params: MLDSA87Parameters(), trialsPerRun: 250);
+  MLDSA87SignBenchmark() : super('87-Sign', params: MLDSA87Parameters(), trialsPerRun: 200);
 }
 
 class VerifyBenchmark extends BenchmarkBase {
@@ -146,7 +144,6 @@ class VerifyBenchmark extends BenchmarkBase {
 
   @override
   void exercise() {
-    // do at least 250 trials
     for (int i = 0; i < trialsPerRun; i ++) {
       run();
     }
@@ -161,15 +158,15 @@ class VerifyBenchmark extends BenchmarkBase {
 }
 
 class MLDSA44VerifyBenchmark extends VerifyBenchmark {
-  MLDSA44VerifyBenchmark() : super('44-Verify', params: MLDSA44Parameters(), trialsPerRun: 250);
+  MLDSA44VerifyBenchmark() : super('44-Verify', params: MLDSA44Parameters(), trialsPerRun: 200);
 }
 
 class MLDSA65VerifyBenchmark extends VerifyBenchmark {
-  MLDSA65VerifyBenchmark() : super('65-Verify', params: MLDSA65Parameters(), trialsPerRun: 250);
+  MLDSA65VerifyBenchmark() : super('65-Verify', params: MLDSA65Parameters(), trialsPerRun: 200);
 }
 
 class MLDSA87VerifyBenchmark extends VerifyBenchmark {
-  MLDSA87VerifyBenchmark() : super('87-Verify', params: MLDSA87Parameters(), trialsPerRun: 250);
+  MLDSA87VerifyBenchmark() : super('87-Verify', params: MLDSA87Parameters(), trialsPerRun: 200);
 }
 
 void main() {
