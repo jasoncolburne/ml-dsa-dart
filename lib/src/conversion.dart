@@ -118,9 +118,8 @@ Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<Int32List> t) {
   int limit = rhoLength;
 
   for (int i = 0; i < k; i++) {
-    final bytes = simpleBitPack(t[i], b);
     limit += rangeLength;
-    pk.setRange(offset, limit, bytes);
+    pk.setRange(offset, limit, simpleBitPack(t[i], b));
     offset += rangeLength;
   }
 
