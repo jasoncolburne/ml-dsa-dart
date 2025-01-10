@@ -57,7 +57,7 @@ Uint8List bytesToBits(Uint8List z) {
 
   for (int i = 0; i < zLength; i++) {
     for (int j = 0; j < 8; j++) {
-      y[8 * i + j] = modQ(zPrime[i], 2);
+      y[8 * i + j] = zPrime[i] & 0x1;
       zPrime[i] ~/= 2;
     }
   }
@@ -83,8 +83,8 @@ Uint8List integerToBits(int x, int alpha) {
 
   int xPrime = x;
   for (int i = 0; i < alpha; i++) {
-    y[i] = modQ(xPrime, 2);
-    xPrime = xPrime ~/ 2;
+    y[i] = xPrime & 0x1;
+    xPrime ~/= 2;
   }
 
   return y;
@@ -96,7 +96,7 @@ Uint8List integerToBytes(int x, int alpha) {
   int xPrime = x;
   for (int i = 0; i < alpha; i++) {
     y[i] = modQ(xPrime, 256);
-    xPrime = xPrime ~/ 256;
+    xPrime ~/= 256;
   }
 
   return y;
