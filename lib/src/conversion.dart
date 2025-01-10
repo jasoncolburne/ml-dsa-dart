@@ -19,12 +19,11 @@ int? coeffFromHalfByte(ParameterSet parameters, int b) {
 }
 
 int? coeffFromThreeBytes(ParameterSet parameters, int b0, int b1, int b2) {
-  int b2Prime = b2;
-  if (b2Prime > 127) {
-    b2Prime &= 0x7f;
+  if (b2 > 127) {
+    b2 &= 0x7f;
   }
 
-  final z = 65536 * b2Prime + 256 * b1 + b0;
+  final z = 65536 * b2 + 256 * b1 + b0;
   if (z < parameters.q()) {
     return z;
   }
@@ -63,7 +62,7 @@ Uint8List bytesToBits(Uint8List z) {
     }
   }
 
-  return Uint8List.fromList(y);
+  return y;
 }
 
 int bitsToInteger(Uint8List y, int alpha) {
@@ -100,7 +99,7 @@ Uint8List integerToBytes(int x, int alpha) {
     xPrime = xPrime ~/ 256;
   }
 
-  return Uint8List.fromList(y);
+  return y;
 }
 
 Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<Int32List> t) {

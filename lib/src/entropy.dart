@@ -11,5 +11,5 @@ Uint8List rbg(int len) {
     entropy[i] = drbg.nextInt(256);
   }
 
-  return Uint8List.fromList(entropy);
+  return entropy;
 }
