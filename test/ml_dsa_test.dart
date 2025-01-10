@@ -112,10 +112,10 @@ bool testMLDSARoundTrip(ParameterSet parameters, int skLen, int pkLen, int sigLe
 }
 
 Uint8List mutate(Uint8List input) {
-  final data = List.generate(input.length, (int i) => input[i]);
+  final data = Uint8List.fromList(input);
   final offset = Random.secure().nextInt(data.length);
   data[offset] ^= 0x01;
-  return Uint8List.fromList(data);
+  return data;
 }
 
 void main() {

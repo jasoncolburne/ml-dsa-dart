@@ -13,15 +13,17 @@ List<List<Int32List>> expandA(ParameterSet parameters, Uint8List rho) {
 
   rhoPrime.setRange(0, rhoLength, rho);
 
-  return List.generate(
-    k,
-    (int r) => List.generate(l, (int s) {
+  final List<List<Int32List>> A = List.filled(k, []);
+  for (int r = 0; r < k; r++) {
+    A[r] = List.filled(l, Int32List(0), growable: false);
+    for (int s = 0; s < l; s++) {
       rhoPrime[rhoLength] = integerToBytes(s, 1)[0];
       rhoPrime[rhoLength + 1] = integerToBytes(r, 1)[0];
-      return rejNttPoly(parameters, rhoPrime);
-    }, growable: false),
-    growable: false,
-  );
+      A[r][s] = rejNttPoly(parameters, rhoPrime);
+    }
+  }
+
+  return A;
 }
 
 (List<Int32List>, List<Int32List>) expandS(
@@ -67,15 +69,15 @@ List<Int32List> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
 
   rhoPrime.setRange(0, rhoLength, rho);
   IncrementalSHAKE hasher = IncrementalSHAKE(true);
-  return List.generate(
-    l,
-    (int r) {
-      rhoPrime.setRange(rhoLength, rhoLength + 2, integerToBytes(mu + r, 2));
-      hasher.absorb(rhoPrime);
-      final Uint8List v = hasher.squeeze(blockSize);
-      hasher.reset();
-      return bitUnpack(v, x, y);
-    },
-    growable: false,
-  );
+  final List<Int32List> u = List.filled(l, Int32List(0), growable: false);
+
+  for (int r = 0; r < l; r++) {
+    rhoPrime.setRange(rhoLength, rhoLength + 2, integerToBytes(mu + r, 2));
+    hasher.absorb(rhoPrime);
+    final Uint8List v = hasher.squeeze(blockSize);
+    u[r] = bitUnpack(v, x, y);
+    hasher.reset();
+  }
+
+  return u;
 }

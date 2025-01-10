@@ -6,6 +6,8 @@ import 'ml_dsa_base.dart';
 import 'reduction.dart';
 
 Int32List sampleInBall(ParameterSet parameters, Uint8List rho) {
+  final int tau = parameters.tau();
+
   final Int32List c = Int32List(256);
 
   IncrementalSHAKE hasher = IncrementalSHAKE(true);
@@ -13,7 +15,7 @@ Int32List sampleInBall(ParameterSet parameters, Uint8List rho) {
   final Uint8List s = hasher.squeeze(8);
 
   final Uint8List h = bytesToBits(s);
-  for (int i = 256 - parameters.tau(); i < 256; i++) {
+  for (int i = 256 - tau; i < 256; i++) {
     Uint8List jSlice = hasher.squeeze(1);
 
     while (jSlice[0] > i) {
@@ -23,7 +25,7 @@ Int32List sampleInBall(ParameterSet parameters, Uint8List rho) {
     final int j = jSlice[0];
     c[i] = c[j];
 
-    if (h[i + parameters.tau() - 256] == 1) {
+    if (h[i + tau - 256] == 1) {
       c[j] = -1;
     } else {
       c[j] = 1;
@@ -84,51 +86,77 @@ Int32List rejBoundedPoly(ParameterSet parameters, Uint8List rho) {
 }
 
 Int32List addPolynomials(ParameterSet parameters, Int32List a, Int32List b) {
-  return Int32List.fromList(List.generate(
-    256,
-    (int i) => modQSymmetric(a[i] + b[i], parameters.q()),
-    growable: false,
-  ));
+  final int q = parameters.q();
+  final Int32List c = Int32List(256);
+
+  for (int i = 0; i < 256; i++) {
+    c[i] = modQSymmetric(a[i] + b[i], q);
+  }
+
+  return c;
 }
 
 Int32List subtractPolynomials(
-    ParameterSet parameters, Int32List a, Int32List b) {
-  return Int32List.fromList(List.generate(
-    256,
-    (int i) => modQSymmetric(a[i] - b[i], parameters.q()),
-    growable: false,
-  ));
+  ParameterSet parameters,
+  Int32List a,
+  Int32List b,
+) {
+  final int q = parameters.q();
+  final Int32List c = Int32List(256);
+
+  for (int i = 0; i < 256; i++) {
+    c[i] = modQSymmetric(a[i] - b[i], q);
+  }
+
+  return c;
 }
 
 List<Int32List> vectorAddPolynomials(
-    ParameterSet parameters, List<Int32List> a, List<Int32List> b) {
-  return List.generate(
-    a.length,
-    (int i) => addPolynomials(parameters, a[i], b[i]),
-    growable: false,
-  );
+  ParameterSet parameters,
+  List<Int32List> a,
+  List<Int32List> b,
+) {
+  final length = a.length;
+  final List<Int32List> c = List.filled(length, Int32List(0), growable: false);
+
+  for (int i = 0; i < length; i++) {
+    c[i] = addPolynomials(parameters, a[i], b[i]);
+  }
+
+  return c;
 }
 
 List<Int32List> vectorSubtractPolynomials(
-    ParameterSet parameters, List<Int32List> a, List<Int32List> b) {
-  return List.generate(
-    a.length,
-    (int i) => subtractPolynomials(parameters, a[i], b[i]),
-    growable: false,
-  );
+  ParameterSet parameters,
+  List<Int32List> a,
+  List<Int32List> b,
+) {
+  final length = a.length;
+  final List<Int32List> c = List.filled(length, Int32List(0), growable: false);
+
+  for (int i = 0; i < length; i++) {
+    c[i] = subtractPolynomials(parameters, a[i], b[i]);
+  }
+
+  return c;
 }
 
 List<Int32List> scalarVectorMultiply(
-    ParameterSet parameters, int c, List<Int32List> v) {
-  return List.generate(
-    v.length,
-    (int i) => Int32List.fromList(
-      List.generate(
-        v[i].length,
-        (int j) => modQSymmetric(c * v[i][j], parameters.q()),
-        growable: false,
-      ),
-    ),
-    growable: false,
-  );
+  ParameterSet parameters,
+  int c,
+  List<Int32List> v,
+) {
+  final int q = parameters.q();
+  final int length = v.length;
+  final int subLength = v[0].length;
+
+  final List<Int32List> u = List.filled(length, Int32List(0), growable: false);
+  for (int i = 0; i < length; i++) {
+    u[i] = Int32List(subLength);
+    for (int j = 0; j < subLength; j++) {
+      u[i][j] = modQSymmetric(c * v[i][j], q);
+    }
+  }
+
+  return u;
 }

@@ -303,6 +303,7 @@ class MLDSA {
       );
 
       z = vectorAddPolynomials(parameters, y, cs1);
+      // print("wlen = ${w.length} cs2len = ${cs2.length}");
       final List<Int32List> r = vectorSubtractPolynomials(parameters, w, cs2);
 
       final int r0Max = vectorMaxAbsCoefficient(
