@@ -128,18 +128,18 @@ Uint8List pkEncode(ParameterSet parameters, Uint8List rho, List<Int32List> t) {
 (Uint8List, List<Int32List>) pkDecode(ParameterSet parameters, Uint8List pk) {
   final int k = parameters.k();
   final Uint8List rho = pk.sublist(0, 32);
-  final Uint8List z = pk.sublist(32);
+  final Uint8List z = Uint8List.view(pk.buffer, 32);
   final int toShift = (parameters.q() - 1).bitLength - parameters.d();
   final int width = 32 * toShift;
+  final int b = (1 << toShift) - 1;
 
-  int offset = 0;
-  int limit = 0;
+  int offset = z.offsetInBytes;
 
   final List<Int32List> t = List.filled(k, Int32List(0), growable: false);
 
   for (int i = 0; i < k; i++) {
-    limit += width;
-    t[i] = simpleBitUnpack(z.sublist(offset, limit), (1 << toShift) - 1);
+    Uint8List view = Uint8List.view(z.buffer, offset, width);
+    t[i] = simpleBitUnpack(view, b);
     offset += width;
   }
 
