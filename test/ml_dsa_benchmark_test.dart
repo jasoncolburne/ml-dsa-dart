@@ -17,26 +17,26 @@ void benchmarkMLDSAVerify(MLDSA dsa, Uint8List pk, Uint8List message, Uint8List 
 }
 
 class MLDSABenchmark extends BenchmarkBase {
-  MLDSABenchmark(super.title, {this.trialsPerRun = 200});
-  final int trialsPerRun;
+  MLDSABenchmark(super.title, {this.runsPerTrialLoop = 200});
+  final int runsPerTrialLoop;
 
   @override
   void exercise() {
-    for (int i = 0; i < trialsPerRun; i ++) {
+    for (int i = 0; i < runsPerTrialLoop; i ++) {
       run();
     }
   }
 
   @override
   void report() {
-    var microsecondsPerRun = measure() / trialsPerRun;
+    var microsecondsPerRun = measure() / runsPerTrialLoop;
     var operationsPerSecond = 1 / (microsecondsPerRun * 0.000001);
     print('$name: ${microsecondsPerRun.toStringAsFixed(3)} µs/op ${operationsPerSecond.toStringAsFixed(3)} ops/s');
   }
 }
 
 class GenerateBenchmark extends MLDSABenchmark {
-  GenerateBenchmark(super.title, {required this.params, super.trialsPerRun});
+  GenerateBenchmark(super.title, {required this.params, super.runsPerTrialLoop});
 
   final ParameterSet params;
 
@@ -66,7 +66,7 @@ class MLDSA87GenerateBenchmark extends GenerateBenchmark {
 }
 
 class SignBenchmark extends MLDSABenchmark {
-  SignBenchmark(super.title, {required this.params, super.trialsPerRun});
+  SignBenchmark(super.title, {required this.params, super.runsPerTrialLoop});
   
   final ParameterSet params;
 
@@ -104,7 +104,7 @@ class MLDSA87SignBenchmark extends SignBenchmark {
 }
 
 class VerifyBenchmark extends MLDSABenchmark {
-  VerifyBenchmark(super.title, {required this.params, super.trialsPerRun});
+  VerifyBenchmark(super.title, {required this.params, super.runsPerTrialLoop});
   
   final ParameterSet params;
 
