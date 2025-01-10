@@ -35,8 +35,8 @@ Uint8List bitsToBytes(Uint8List y) {
   final alpha = y.length;
   final Uint8List z = Uint8List((alpha + 7) ~/ 8);
 
+  int j = 0;
   for (int i = 0; i < alpha; i += 8) {
-    final int j = i ~/ 8;
     int mask = 0x01;
 
     for (int k = i; k < i + 8; k++) {
@@ -45,6 +45,8 @@ Uint8List bitsToBytes(Uint8List y) {
       }
       mask <<= 1;
     }
+
+    j++;
   }
 
   return z;
