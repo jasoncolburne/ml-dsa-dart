@@ -52,6 +52,76 @@ Interestingly, JIT execution wins over AOT compilation, by a significant margin:
 87-Verify: 6953.257 µs/op 143.817 ops/s
 ```
 
+I also tried parallelizing some of the outer loops with negative performance impact, like this:
+
+Before
+
+```dart
+Int32List addPolynomials(ParameterSet parameters, Int32List a, Int32List b) {
+  final int q = parameters.q();
+  final Int32List c = Int32List(256);
+
+  for (int i = 0; i < 256; i++) {
+    c[i] = modQSymmetric(a[i] + b[i], q);
+  }
+
+  return c;
+}
+
+List<Int32List> vectorAddPolynomials(
+  ParameterSet parameters,
+  List<Int32List> a,
+  List<Int32List> b,
+) {
+  final length = a.length;
+  final List<Int32List> c = List.filled(length, Int32List(0), growable: false);
+
+  for (int i = 0; i < length; i++) {
+    c[i] = addPolynomials(parameters, a[i], b[i]);
+  }
+
+  return c;
+}
+```
+
+After
+
+```dart
+Future<Int32List> addPolynomials(ParameterSet parameters, Int32List a, Int32List b) async {
+  final int q = parameters.q();
+  final Int32List c = Int32List(256);
+
+  for (int i = 0; i < 256; i++) {
+    c[i] = modQSymmetric(a[i] + b[i], q);
+  }
+
+  return c;
+}
+
+Future<List<Int32List>> vectorAddPolynomials(
+  ParameterSet parameters,
+  List<Int32List> a,
+  List<Int32List> b,
+) async {
+  final length = a.length;
+  final List<Int32List> c = List.filled(length, Int32List(0), growable: false);
+  final List<Future<Int32List>> futures = List.filled(length, Future.sync(() => Int32List(0)));
+
+  for (int i = 0; i < length; i++) {
+    futures[i] = addPolynomials(parameters, a[i], b[i]);
+  }
+
+  for (int i = 0; i < length; i++) {
+    c[i] = await futures[i];
+  }
+
+  return c;
+}
+```
+
+Maybe there is a way to use a pool to do this with a positive impact, but when I tried in golang
+using a workerpool it also decresed performance.
+
 ## TODO
 
 - [ ] Proper DRBG
