@@ -351,10 +351,13 @@ Uint8List bitPack(Int32List w, int a, int b) {
   final int bitLength = (a + b).bitLength;
   final Uint8List z = Uint8List(bitLength * 256);
 
+  int offset = 0;
+  int limit = 0;
+
   for (int i = 0; i < 256; i++) {
-    final offset = i * bitLength;
-    final limit = offset + bitLength;
+    limit += bitLength;
     z.setRange(offset, limit, integerToBits(b - w[i], bitLength));
+    offset += bitLength;
   }
 
   return bitsToBytes(z);
