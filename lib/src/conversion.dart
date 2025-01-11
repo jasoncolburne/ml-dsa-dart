@@ -38,9 +38,15 @@ Uint8List bitsToBytes(Uint8List y) {
     int mask = 0x01;
 
     for (int k = i; k < i + 8; k++) {
+      int toCombine = 255;
+      
       if (y[k] == 1) {
-        z[j] |= mask;
+        toCombine = mask;
+      } else {
+        toCombine = 0;
       }
+
+      z[j] |= toCombine;
       mask <<= 1;
     }
 
