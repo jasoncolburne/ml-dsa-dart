@@ -19,9 +19,7 @@ int? coeffFromHalfByte(ParameterSet parameters, int b) {
 }
 
 int? coeffFromThreeBytes(ParameterSet parameters, int b0, int b1, int b2) {
-  if (b2 > 127) {
-    b2 &= 0x7f;
-  }
+  b2 &= 0x7f;
 
   final z = 65536 * b2 + 256 * b1 + b0;
   if (z < parameters.q()) {
