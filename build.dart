@@ -44,6 +44,7 @@ void main(List<String> args) {
         path.basenameWithoutExtension(entity.path) + objectExtension);
       
       final result = Process.runSync(compiler, [
+        '-fPIC',
         '-o',
         objectPath,
         '-c',
