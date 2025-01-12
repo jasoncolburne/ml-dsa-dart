@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'ml_dsa_base.dart';
 
 int modMultiply(int a, int b, int q) {
@@ -18,12 +20,21 @@ int modQSymmetric(int n, int q) {
   return result;
 }
 
-List<List<int>> vectorModQSymmetric(List<List<int>> z, int q) {
-  return List.generate(z.length, (int i) {
-    return List.generate(z[i].length, (int j) {
-      return modQSymmetric(z[i][j], q);
-    }, growable: false);
-  }, growable: false);
+List<Int32List> vectorModQSymmetric(List<Int32List> z, int q) {
+  final int outerLength = z.length;
+  final int innerLength = z[0].length;
+
+  final List<Int32List> v =
+      List.filled(outerLength, Int32List(0), growable: false);
+
+  for (int i = 0; i < outerLength; i++) {
+    v[i] = Int32List(innerLength);
+    for (int j = 0; j < innerLength; j++) {
+      v[i][j] = modQSymmetric(z[i][j], q);
+    }
+  }
+
+  return v;
 }
 
 (int, int) power2Round(ParameterSet parameters, int r) {
@@ -34,16 +45,17 @@ List<List<int>> vectorModQSymmetric(List<List<int>> z, int q) {
   return ((rPlus - r0) ~/ bound, r0);
 }
 
-(List<List<int>>, List<List<int>>) vectorPower2Round(
-    ParameterSet parameters, List<List<int>> t) {
-  final List<List<int>> t0 = List.generate(parameters.k(),
-      (int _) => List.generate(256, (int _) => 0, growable: false),
-      growable: false);
-  final List<List<int>> t1 = List.generate(parameters.k(),
-      (int _) => List.generate(256, (int _) => 0, growable: false),
-      growable: false);
+(List<Int32List>, List<Int32List>) vectorPower2Round(
+    ParameterSet parameters, List<Int32List> t) {
+  final int k = parameters.k();
+
+  final List<Int32List> t0 = List.filled(k, Int32List(0), growable: false);
+  final List<Int32List> t1 = List.filled(k, Int32List(0), growable: false);
 
   for (int j = 0; j < parameters.k(); j++) {
+    t0[j] = Int32List(256);
+    t1[j] = Int32List(256);
+
     for (int i = 0; i < 256; i++) {
       final (int y, int x) = power2Round(parameters, t[j][i]);
       t1[j][i] = y;
@@ -73,12 +85,19 @@ int highBits(ParameterSet parameters, int r) {
   return r1;
 }
 
-List<List<int>> vectorHighBits(ParameterSet parameters, List<List<int>> v) {
-  return List.generate(parameters.k(), (int j) {
-    return List.generate(256, (int i) {
-      return highBits(parameters, v[j][i]);
-    }, growable: false);
-  }, growable: false);
+List<Int32List> vectorHighBits(ParameterSet parameters, List<Int32List> v) {
+  final int k = parameters.k();
+
+  final List<Int32List> u = List.filled(k, Int32List(0));
+
+  for (int j = 0; j < k; j++) {
+    u[j] = Int32List(256);
+    for (int i = 0; i < 256; i++) {
+      u[j][i] = highBits(parameters, v[j][i]);
+    }
+  }
+
+  return u;
 }
 
 int lowBits(ParameterSet parameters, int r) {
@@ -93,13 +112,24 @@ int makeHint(ParameterSet parameters, int z, int r) {
   return (r1 != v1) ? 1 : 0;
 }
 
-List<List<int>> vectorMakeHint(
-    ParameterSet parameters, List<List<int>> ct0Neg, List<List<int>> wPrime) {
-  return List.generate(ct0Neg.length, (int i) {
-    return List.generate(ct0Neg[i].length, (int j) {
-      return makeHint(parameters, ct0Neg[i][j], wPrime[i][j]);
-    }, growable: false);
-  }, growable: false);
+List<Uint8List> vectorMakeHint(
+  ParameterSet parameters,
+  List<Int32List> ct0Neg,
+  List<Int32List> wPrime,
+) {
+  final outerLength = ct0Neg.length;
+  final innerLength = ct0Neg[0].length;
+
+  final List<Uint8List> h = List.filled(outerLength, Uint8List(0));
+
+  for (int i = 0; i < outerLength; i++) {
+    h[i] = Uint8List(innerLength);
+    for (int j = 0; j < innerLength; j++) {
+      h[i][j] = makeHint(parameters, ct0Neg[i][j], wPrime[i][j]);
+    }
+  }
+
+  return h;
 }
 
 int useHint(ParameterSet parameters, int h, int r) {
@@ -117,22 +147,33 @@ int useHint(ParameterSet parameters, int h, int r) {
   return r1;
 }
 
-List<List<int>> vectorUseHint(
-    ParameterSet parameters, List<List<int>> v, List<List<int>> h) {
-  return List.generate(parameters.k(), (int i) {
-    return List.generate(v[i].length, (int j) {
-      return useHint(parameters, h[i][j], v[i][j]);
-    }, growable: false);
-  }, growable: false);
+List<Int32List> vectorUseHint(
+  ParameterSet parameters,
+  List<Int32List> v,
+  List<Uint8List> h,
+) {
+  final int k = parameters.k();
+  final int innerLength = v[0].length;
+
+  final List<Int32List> u = List.filled(k, Int32List(0));
+
+  for (int i = 0; i < k; i++) {
+    u[i] = Int32List(innerLength);
+    for (int j = 0; j < innerLength; j++) {
+      u[i][j] = useHint(parameters, h[i][j], v[i][j]);
+    }
+  }
+
+  return u;
 }
 
-int onesInH(List<List<int>> h) {
+int onesInH(List<Uint8List> h) {
   return h.expand((row) => row).reduce((int a, int b) => a + b);
 }
 
 int vectorMaxAbsCoefficient(
   ParameterSet parameters,
-  List<List<int>> v, {
+  List<Int32List> v, {
   bool lowBitsOnly = false,
 }) {
   return v.expand((row) => row).reduce((int a, int b) {

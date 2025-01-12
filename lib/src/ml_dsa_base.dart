@@ -2,6 +2,7 @@
 
 import 'dart:typed_data';
 
+import 'comparison.dart';
 import 'conversion.dart';
 import 'entropy.dart';
 import 'expansion.dart';
@@ -161,14 +162,14 @@ class MLDSA {
 
     final rnd = rbg(seedLength);
 
-    final List<int> mPrime = concatenateBytes([
+    final Uint8List mPrime = concatenateBytes([
       integerToBytes(0, 1),
       integerToBytes(ctx.length, 1),
       ctx,
       message,
     ]);
 
-    return _sign(sk, Uint8List.fromList(mPrime), rnd);
+    return _sign(sk, mPrime, rnd);
   }
 
   Uint8List signDeterministically(
@@ -177,18 +178,16 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final Uint8List rnd = Uint8List.fromList(
-      List.generate(seedLength, (int _) => 0, growable: false),
-    );
+    final Uint8List rnd = Uint8List(seedLength);
 
-    final List<int> mPrime = concatenateBytes([
+    final Uint8List mPrime = concatenateBytes([
       integerToBytes(0, 1),
       integerToBytes(ctx.length, 1),
       ctx,
       message,
     ]);
 
-    return _sign(sk, Uint8List.fromList(mPrime), rnd);
+    return _sign(sk, mPrime, rnd);
   }
 
   bool verify(
@@ -201,14 +200,14 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final List<int> mPrime = concatenateBytes([
+    final Uint8List mPrime = concatenateBytes([
       integerToBytes(0, 1),
       integerToBytes(ctx.length, 1),
       ctx,
       message,
     ]);
 
-    return _verify(pk, Uint8List.fromList(mPrime), signature);
+    return _verify(pk, mPrime, signature);
   }
 
   (Uint8List, Uint8List) _keyGen(Uint8List rnd) {
@@ -222,19 +221,19 @@ class MLDSA {
     final Uint8List rhoPrime = bytes.sublist(32, 96);
     final Uint8List kappa = bytes.sublist(96);
 
-    final List<List<List<int>>> AHat = expandA(parameters, rho);
-    final (List<List<int>> s1, List<List<int>> s2) = expandS(
+    final List<List<Int32List>> AHat = expandA(parameters, rho);
+    final (List<Int32List> s1, List<Int32List> s2) = expandS(
       parameters,
       rhoPrime,
     );
-    final List<List<int>> s1Hat = vectorNtt(parameters, s1);
-    final List<List<int>> product = matrixVectorNtt(parameters, AHat, s1Hat);
-    final List<List<int>> t = vectorAddPolynomials(
+    final List<Int32List> s1Hat = vectorNtt(parameters, s1);
+    final List<Int32List> product = matrixVectorNtt(parameters, AHat, s1Hat);
+    final List<Int32List> t = vectorAddPolynomials(
       parameters,
       vectorNttInverse(parameters, product),
       s2,
     );
-    final (List<List<int>> t1, List<List<int>> t0) = vectorPower2Round(
+    final (List<Int32List> t1, List<Int32List> t0) = vectorPower2Round(
       parameters,
       t,
     );
@@ -252,15 +251,15 @@ class MLDSA {
       Uint8List rho,
       Uint8List kappa,
       Uint8List tr,
-      List<List<int>> s1,
-      List<List<int>> s2,
-      List<List<int>> t0
+      List<Int32List> s1,
+      List<Int32List> s2,
+      List<Int32List> t0
     ) = skDecode(parameters, sk);
 
-    final List<List<int>> s1Hat = vectorNtt(parameters, s1);
-    final List<List<int>> s2Hat = vectorNtt(parameters, s2);
-    final List<List<int>> t0Hat = vectorNtt(parameters, t0);
-    final List<List<List<int>>> AHat = expandA(parameters, rho);
+    final List<Int32List> s1Hat = vectorNtt(parameters, s1);
+    final List<Int32List> s2Hat = vectorNtt(parameters, s2);
+    final List<Int32List> t0Hat = vectorNtt(parameters, t0);
+    final List<List<Int32List>> AHat = expandA(parameters, rho);
 
     final Uint8List mu = concatenateBytesAndSHAKE256(64, [tr, mPrime]);
     final Uint8List rhoPrimePrime = concatenateBytesAndSHAKE256(64, [
@@ -270,40 +269,41 @@ class MLDSA {
     ]);
 
     int k = 0;
-    List<List<int>>? z;
-    List<List<int>>? h;
+    List<Int32List>? z;
+    List<Uint8List>? h;
     Uint8List cTilde = Uint8List(0);
 
     while (z == null && h == null) {
-      final List<List<int>> y = expandMask(
+      final List<Int32List> y = expandMask(
         parameters,
         rhoPrimePrime,
         k,
       );
 
-      final List<List<int>> yHat = vectorNtt(parameters, y);
-      final List<List<int>> product = matrixVectorNtt(parameters, AHat, yHat);
-      final List<List<int>> w = vectorNttInverse(parameters, product);
-      final List<List<int>> w1 = vectorHighBits(parameters, w);
+      final List<Int32List> yHat = vectorNtt(parameters, y);
+      final List<Int32List> product = matrixVectorNtt(parameters, AHat, yHat);
+      final List<Int32List> w = vectorNttInverse(parameters, product);
+      final List<Int32List> w1 = vectorHighBits(parameters, w);
 
       cTilde = concatenateBytesAndSHAKE256(parameters.lambda() ~/ 4, [
         mu,
         w1Encode(parameters, w1),
       ]);
-      final List<int> c = sampleInBall(parameters, cTilde);
-      final List<int> cHat = ntt(parameters, c);
 
-      final List<List<int>> cs1 = vectorNttInverse(
+      final Int32List c = sampleInBall(parameters, cTilde);
+      final Int32List cHat = ntt(parameters, c);
+
+      final List<Int32List> cs1 = vectorNttInverse(
         parameters,
         scalarVectorNtt(parameters, cHat, s1Hat),
       );
-      final List<List<int>> cs2 = vectorNttInverse(
+      final List<Int32List> cs2 = vectorNttInverse(
         parameters,
         scalarVectorNtt(parameters, cHat, s2Hat),
       );
 
       z = vectorAddPolynomials(parameters, y, cs1);
-      final List<List<int>> r = vectorSubtractPolynomials(parameters, w, cs2);
+      final List<Int32List> r = vectorSubtractPolynomials(parameters, w, cs2);
 
       final int r0Max = vectorMaxAbsCoefficient(
         parameters,
@@ -316,12 +316,20 @@ class MLDSA {
         z = null;
         h = null;
       } else {
-        final List<List<int>> ct0 = vectorNttInverse(
-            parameters, scalarVectorNtt(parameters, cHat, t0Hat));
-        final List<List<int>> ct0Neg =
-            scalarVectorMultiply(parameters, -1, ct0);
-        final List<List<int>> wPrime = vectorAddPolynomials(
-            parameters, vectorSubtractPolynomials(parameters, w, cs2), ct0);
+        final List<Int32List> ct0 = vectorNttInverse(
+          parameters,
+          scalarVectorNtt(parameters, cHat, t0Hat),
+        );
+        final List<Int32List> ct0Neg = scalarVectorMultiply(
+          parameters,
+          -1,
+          ct0,
+        );
+        final List<Int32List> wPrime = vectorAddPolynomials(
+          parameters,
+          vectorSubtractPolynomials(parameters, w, cs2),
+          ct0,
+        );
 
         h = vectorMakeHint(parameters, ct0Neg, wPrime);
         final int ct0Max = vectorMaxAbsCoefficient(parameters, ct0);
@@ -334,7 +342,7 @@ class MLDSA {
       k += parameters.l();
     }
 
-    final List<List<int>> zModQSymmetric =
+    final List<Int32List> zModQSymmetric =
         vectorModQSymmetric(z!, parameters.q());
     final Uint8List sigma = sigEncode(parameters, cTilde, zModQSymmetric, h!);
 
@@ -342,23 +350,23 @@ class MLDSA {
   }
 
   bool _verify(Uint8List pk, Uint8List mPrime, Uint8List sigma) {
-    final (Uint8List rho, List<List<int>> t1) = pkDecode(parameters, pk);
-    final (Uint8List cTilde, List<List<int>> z, List<List<int>>? h) =
+    final (Uint8List rho, List<Int32List> t1) = pkDecode(parameters, pk);
+    final (Uint8List cTilde, List<Int32List> z, List<Uint8List>? h) =
         sigDecode(parameters, sigma);
 
     if (h == null) {
       return false;
     }
 
-    final List<List<List<int>>> AHat = expandA(parameters, rho);
+    final List<List<Int32List>> AHat = expandA(parameters, rho);
 
     final Uint8List tr = concatenateBytesAndSHAKE256(64, [pk]);
     final Uint8List mu = concatenateBytesAndSHAKE256(64, [tr, mPrime]);
 
-    final List<int> c = sampleInBall(parameters, cTilde);
-    final List<int> cHat = ntt(parameters, c);
+    final Int32List c = sampleInBall(parameters, cTilde);
+    final Int32List cHat = ntt(parameters, c);
 
-    final List<List<int>> ct = scalarVectorNtt(
+    final List<Int32List> ct = scalarVectorNtt(
       parameters,
       cHat,
       vectorNtt(
@@ -366,15 +374,15 @@ class MLDSA {
         scalarVectorMultiply(parameters, 1 << parameters.d(), t1),
       ),
     );
-    final List<List<int>> Az = matrixVectorNtt(
+    final List<Int32List> Az = matrixVectorNtt(
       parameters,
       AHat,
       vectorNtt(parameters, z),
     );
-    final List<List<int>> Azct = subtractVectorNtt(parameters, Az, ct);
+    final List<Int32List> Azct = subtractVectorNtt(parameters, Az, ct);
 
-    final List<List<int>> wApproxPrime = vectorNttInverse(parameters, Azct);
-    final List<List<int>> w1Prime = vectorUseHint(parameters, wApproxPrime, h);
+    final List<Int32List> wApproxPrime = vectorNttInverse(parameters, Azct);
+    final List<Int32List> w1Prime = vectorUseHint(parameters, wApproxPrime, h);
 
     final Uint8List cTildePrime = concatenateBytesAndSHAKE256(
       parameters.lambda() ~/ 4,
@@ -382,13 +390,7 @@ class MLDSA {
     );
     final int zMax = vectorMaxAbsCoefficient(parameters, z);
 
-    bool cTildeMatches = true;
-    for (int i = 0; i < cTilde.length; i++) {
-      if (cTilde[i] != cTildePrime[i]) {
-        cTildeMatches = false;
-      }
-    }
-
-    return zMax < (parameters.gamma1() - parameters.beta()) && cTildeMatches;
+    return zMax < (parameters.gamma1() - parameters.beta()) &&
+        constantTimeEquals(cTilde, cTildePrime);
   }
 }

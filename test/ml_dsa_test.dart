@@ -37,11 +37,12 @@ bool testMKDSAKAT(ParameterSet params, List<Map<String, String>> katVectors) {
     final ctx = Uint8List.fromList(HEX.decode(vector['Context']!));
 
     final sig = dsa.signDeterministically(sk, message, ctx);
-    final List<int> sm = List.generate(sig.length, (int i) => sig[i]);
-    sm.addAll(message);
+    final Uint8List sm = Uint8List(sig.length + message.length);
+    sm.setRange(0, sig.length, sig);
+    sm.setRange(sig.length, sm.length, message);
     
-    if (vector['Signature'] != HEX.encode(Uint8List.fromList(sm))) {
-      print('bad sm:');
+    if (vector['Signature'] != HEX.encode(sm)) {
+      print('bad sm (${sig.length}/${sm.length}):');
       print(HEX.encode(sm));
       print('expected:');
       print(vector['Signature']);
@@ -111,10 +112,10 @@ bool testMLDSARoundTrip(ParameterSet parameters, int skLen, int pkLen, int sigLe
 }
 
 Uint8List mutate(Uint8List input) {
-  final data = List.generate(input.length, (int i) => input[i]);
+  final data = Uint8List.fromList(input);
   final offset = Random.secure().nextInt(data.length);
   data[offset] ^= 0x01;
-  return Uint8List.fromList(data);
+  return data;
 }
 
 void main() {

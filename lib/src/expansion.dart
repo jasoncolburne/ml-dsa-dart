@@ -5,66 +5,81 @@ import 'shake.dart';
 import 'ml_dsa_base.dart';
 import 'polynomials.dart';
 
-List<List<List<int>>> expandA(ParameterSet parameters, Uint8List rho) {
+List<List<Int32List>> expandA(ParameterSet parameters, Uint8List rho) {
+  final int k = parameters.k();
+  final int l = parameters.l();
   final int rhoLength = rho.length;
-  final List<int> rhoPrime = List.generate(rhoLength, (int i) => rho[i]);
-  rhoPrime.addAll([0, 0]);
+  final Uint8List rhoPrime = Uint8List(rhoLength + 2);
 
-  return List.generate(parameters.k(), (int r) {
-    return List.generate(parameters.l(), (int s) {
+  rhoPrime.setRange(0, rhoLength, rho);
+
+  final List<List<Int32List>> A = List.filled(k, []);
+  for (int r = 0; r < k; r++) {
+    A[r] = List.filled(l, Int32List(0), growable: false);
+    for (int s = 0; s < l; s++) {
       rhoPrime[rhoLength] = integerToBytes(s, 1)[0];
       rhoPrime[rhoLength + 1] = integerToBytes(r, 1)[0];
+      A[r][s] = rejNttPoly(parameters, rhoPrime);
+    }
+  }
 
-      return rejNttPoly(parameters, Uint8List.fromList(rhoPrime));
-    });
-  });
+  return A;
 }
 
-(List<List<int>>, List<List<int>>) expandS(
-    ParameterSet parameters, Uint8List rho) {
+(List<Int32List>, List<Int32List>) expandS(
+  ParameterSet parameters,
+  Uint8List rho,
+) {
+  final int k = parameters.k();
+  final int l = parameters.l();
   final int rhoLength = rho.length;
-  final List<int> rhoPrime = List.generate(rhoLength, (int i) => rho[i]);
-  rhoPrime.addAll([0, 0]);
+  final Uint8List rhoPrime = Uint8List(rhoLength + 2);
 
-  final List<List<int>> s1 = List.generate(parameters.l(), (int _) {
-    return List.empty();
-  }, growable: false);
-  final List<List<int>> s2 = List.generate(parameters.k(), (int _) {
-    return List.empty();
-  }, growable: false);
+  final List<Int32List> s1 = List.filled(l, Int32List(0), growable: false);
+  final List<Int32List> s2 = List.filled(k, Int32List(0), growable: false);
 
-  for (int r = 0; r < parameters.l(); r++) {
+  rhoPrime.setRange(0, rhoLength, rho);
+
+  for (int r = 0; r < l; r++) {
     final Uint8List bytes = integerToBytes(r, 2);
     rhoPrime[rhoLength] = bytes[0];
     rhoPrime[rhoLength + 1] = bytes[1];
-    s1[r] = rejBoundedPoly(parameters, Uint8List.fromList(rhoPrime));
+    s1[r] = rejBoundedPoly(parameters, rhoPrime);
   }
 
-  for (int r = 0; r < parameters.k(); r++) {
-    final Uint8List bytes = integerToBytes(r + parameters.l(), 2);
+  for (int r = 0; r < k; r++) {
+    final Uint8List bytes = integerToBytes(r + l, 2);
     rhoPrime[rhoLength] = bytes[0];
     rhoPrime[rhoLength + 1] = bytes[1];
-    s2[r] = rejBoundedPoly(parameters, Uint8List.fromList(rhoPrime));
+    s2[r] = rejBoundedPoly(parameters, rhoPrime);
   }
 
   return (s1, s2);
 }
 
-List<List<int>> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
+List<Int32List> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
+  final int l = parameters.l();
   final int rhoLength = rho.length;
-  final List<int> rhoPrime = List.generate(rhoLength, (int i) => rho[i]);
-  rhoPrime.addAll([0, 0]);
+  final Uint8List rhoPrime = Uint8List(rho.length + 2);
 
   final int c = 1 + (parameters.gamma1() - 1).bitLength;
+  final int blockSize = 32 * c;
+  final int y = parameters.gamma1();
+  final int x = y - 1;
 
-  return List.generate(parameters.l(), (int r) {
-    final Uint8List bytes = integerToBytes(mu + r, 2);
-    rhoPrime[rhoLength] = bytes[0];
-    rhoPrime[rhoLength + 1] = bytes[1];
+  rhoPrime.setRange(0, rhoLength, rho);
+  IncrementalSHAKE hasher = IncrementalSHAKE(256);
+  final List<Int32List> u = List.filled(l, Int32List(0), growable: false);
 
-    IncrementalSHAKE hasher = IncrementalSHAKE(true);
-    hasher.absorb(Uint8List.fromList(rhoPrime));
-    final Uint8List v = hasher.squeeze(32 * c);
-    return bitUnpack(v, parameters.gamma1() - 1, parameters.gamma1());
-  });
+  for (int r = 0; r < l; r++) {
+    rhoPrime.setRange(rhoLength, rhoLength + 2, integerToBytes(mu + r, 2));
+    hasher.absorb(rhoPrime);
+    final Uint8List v = hasher.squeeze(blockSize);
+    u[r] = bitUnpack(v, x, y);
+    hasher.reset();
+  }
+
+  hasher.destroy();
+
+  return u;
 }
