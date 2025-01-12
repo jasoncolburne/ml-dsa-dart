@@ -1,5 +1,5 @@
 name: ml_dsa
-description: A starting point for Dart libraries or applications.
+description: Module-Lattice-Based Digital Signature Standard
 version: 1.0.0
 repository: https://github.com/jasoncolburne/ml-dsa-dart
 
