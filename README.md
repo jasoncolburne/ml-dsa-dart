@@ -66,4 +66,4 @@ Tests were performed on an Apple M2 Max Macbook Pro (2023).
 
 ## TODO
 
-- [ ] Proper DRBG
+- [x] Proper DRBG (? - I didn't really audit what I did)
