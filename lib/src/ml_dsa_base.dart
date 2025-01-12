@@ -160,7 +160,7 @@ class MLDSA {
       throw Exception('ctx length > 255');
     }
 
-    final rnd = rbg(seedLength);
+    final Uint8List rnd = rbg(seedLength);
 
     final Uint8List mPrime = concatenateBytes([
       integerToBytes(0, 1),

@@ -14,3 +14,11 @@ benchmark: build
 	@./benchmarks
 	@rm benchmarks
 
+format:
+	dart format lib test/ml_dsa* example
+
+lint:
+	dart analyze --fatal-infos
+
+fix:
+	dart fix --apply
