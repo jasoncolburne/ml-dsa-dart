@@ -10,7 +10,7 @@ Int32List sampleInBall(ParameterSet parameters, Uint8List rho) {
 
   final Int32List c = Int32List(256);
 
-  IncrementalSHAKE hasher = IncrementalSHAKE(true);
+  IncrementalSHAKE hasher = IncrementalSHAKE(256);
   hasher.absorb(rho);
   final Uint8List s = hasher.squeeze(8);
 
@@ -32,13 +32,15 @@ Int32List sampleInBall(ParameterSet parameters, Uint8List rho) {
     }
   }
 
+  hasher.destroy();
+
   return c;
 }
 
 Int32List rejNttPoly(ParameterSet parameters, Uint8List rho) {
   final Int32List a = Int32List(256);
 
-  IncrementalSHAKE hasher = IncrementalSHAKE(false);
+  IncrementalSHAKE hasher = IncrementalSHAKE(128);
   hasher.absorb(rho);
 
   int j = 0;
@@ -54,13 +56,15 @@ Int32List rejNttPoly(ParameterSet parameters, Uint8List rho) {
     j += 1;
   }
 
+  hasher.destroy();
+
   return a;
 }
 
 Int32List rejBoundedPoly(ParameterSet parameters, Uint8List rho) {
   final Int32List a = Int32List(256);
 
-  IncrementalSHAKE hasher = IncrementalSHAKE(true);
+  IncrementalSHAKE hasher = IncrementalSHAKE(256);
   hasher.absorb(rho);
 
   int j = 0;
@@ -81,6 +85,8 @@ Int32List rejBoundedPoly(ParameterSet parameters, Uint8List rho) {
       j += 1;
     }
   }
+
+  hasher.destroy();
 
   return a;
 }

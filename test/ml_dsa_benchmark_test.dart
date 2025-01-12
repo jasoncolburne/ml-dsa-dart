@@ -143,7 +143,9 @@ class MLDSA87VerifyBenchmark extends VerifyBenchmark {
   MLDSA87VerifyBenchmark() : super('87-Verify', params: MLDSA87Parameters());
 }
 
-void main() {
+void main() async {
+  await Future.delayed(Duration(seconds: 5), () {});
+
   MLDSA44GenerateBenchmark().report();
   MLDSA65GenerateBenchmark().report();
   MLDSA87GenerateBenchmark().report();

@@ -500,7 +500,9 @@ Uint8List concatenateBytesAndSHAKE256(int outputLength, List<Uint8List> args) {
     input = concatenateBytes(args);
   }
 
-  final IncrementalSHAKE hasher = IncrementalSHAKE(true);
+  final IncrementalSHAKE hasher = IncrementalSHAKE(256);
   hasher.absorb(input);
-  return hasher.squeeze(outputLength);
+  final Uint8List result = hasher.squeeze(outputLength);
+  hasher.destroy();
+  return result;
 }

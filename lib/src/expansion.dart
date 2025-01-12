@@ -68,7 +68,7 @@ List<Int32List> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
   final int x = y - 1;
 
   rhoPrime.setRange(0, rhoLength, rho);
-  IncrementalSHAKE hasher = IncrementalSHAKE(true);
+  IncrementalSHAKE hasher = IncrementalSHAKE(256);
   final List<Int32List> u = List.filled(l, Int32List(0), growable: false);
 
   for (int r = 0; r < l; r++) {
@@ -78,6 +78,8 @@ List<Int32List> expandMask(ParameterSet parameters, Uint8List rho, int mu) {
     u[r] = bitUnpack(v, x, y);
     hasher.reset();
   }
+
+  hasher.destroy();
 
   return u;
 }
