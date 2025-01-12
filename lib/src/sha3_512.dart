@@ -3,8 +3,9 @@ import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
-import 'package:ml_dsa/src/keccak.dart';
 import 'package:path/path.dart' as path;
+
+import 'keccak.dart';
 
 // ignore: camel_case_types
 class SHA3_512 {
