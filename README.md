@@ -9,6 +9,27 @@ to avoid re-computation or indirect access in loops. The biggest gain, however, 
 replaced the dart implementation of Shake128 and Shake256 with the official C implementation. This
 is primarily because of the lack of Uint64s in Dart, that one bit really complicates things.
 
+About that official implementation - to work with ML-DSA, squeezing needed a small adjustment:
+
+```C
+int SpongeAbsorbLastFewBits(SpongeInstance *instance, unsigned char delimitedData)
+{
+    unsigned int rateInBytes = instance->rate/8;
+
+    if (delimitedData == 0)
+        return 1;
+    if (instance->squeezing)
+        return 0; /* Too late for additional input */
+
+    /* ... */
+}
+```
+
+The `return 0` there if squeezing is in progress, it used to be `return 1`. This is necessary to
+allow for repeated absorption and squeezing.
+
+### Results
+
 ```
 ❯ git checkout main && dart pub get && dart compile exe test/ml_dsa_benchmark_test.dart -o benchmarks && ./benchmarks && git checkout performance && dart pub get && dart --enable-experiment=native-assets compile exe test/ml_dsa_benchmark_test.dart -o benchmarks && ./benchmarks
 Switched to branch 'main'
