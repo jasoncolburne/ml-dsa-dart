@@ -30,20 +30,20 @@ allow for repeated absorption and squeezing.
 
 ### Results
 
-**Key Generation:**
-ML-DSA-44: 3.53x faster (201 ops/s to 711 ops/s)
-ML-DSA-65: 3.79x faster (116 ops/s to 440 ops/s)
-ML-DSA-87: 3.98x faster (71 ops/s to 282 ops/s)
+**Key Generation:**<br/>
+ML-DSA-44: 3.53x faster (201 ops/s to 711 ops/s)<br/>
+ML-DSA-65: 3.79x faster (116 ops/s to 440 ops/s)<br/>
+ML-DSA-87: 3.98x faster (71 ops/s to 282 ops/s)<br/>
 
-**Signing:**
-ML-DSA-44: 2.83x faster (89 ops/s to 251 ops/s)
-ML-DSA-65: 3.23x faster (53 ops/s to 172 ops/s)
-ML-DSA-87: 3.45x faster (41 ops/s to 142 ops/s)
+**Signing:**<br/>
+ML-DSA-44: 2.83x faster (89 ops/s to 251 ops/s)<br/>
+ML-DSA-65: 3.23x faster (53 ops/s to 172 ops/s)<br/>
+ML-DSA-87: 3.45x faster (41 ops/s to 142 ops/s)<br/>
 
-**Verification:**
-ML-DSA-44: 4.17x faster (222 ops/s to 925 ops/s)
-ML-DSA-65: 4.36x faster (130 ops/s to 566 ops/s)
-ML-DSA-87: 4.30x faster (74 ops/s to 320 ops/s)
+**Verification:**<br/>
+ML-DSA-44: 4.17x faster (222 ops/s to 925 ops/s)<br/>
+ML-DSA-65: 4.36x faster (130 ops/s to 566 ops/s)<br/>
+ML-DSA-87: 4.30x faster (74 ops/s to 320 ops/s)<br/>
 
 _From Perplexity_: Overall, the performance improvements range from 2.83x to 4.36x faster across all ML-DSA variants. The most significant gains are observed in the verification process, with improvements becoming more pronounced for larger key sizes, particularly in key generation and signing operations.
 
