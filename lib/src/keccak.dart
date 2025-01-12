@@ -1,3 +1,5 @@
+// ignore_for_file: camel_case_types, constant_identifier_names
+
 import 'dart:ffi' as ffi;
 
 final class KeccakP1600_plain64_state extends ffi.Struct {
@@ -80,3 +82,11 @@ typedef DartKeccak_HashSqueeze = int Function(
     ffi.Pointer<Keccak_HashInstance> hashInstance,
     ffi.Pointer<BitSequence> data,
     int databitlen);
+typedef NativeSHA3_512 = ffi.Int Function(
+    ffi.Pointer<ffi.Uint8> output,
+    ffi.Pointer<ffi.Uint8> input,
+    ffi.Size inputByteLen);
+typedef DartSHA3_512 = int Function(
+    ffi.Pointer<ffi.Uint8> output,
+    ffi.Pointer<ffi.Uint8> input,
+    int inputByteLen);
