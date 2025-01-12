@@ -6,7 +6,6 @@ import 'package:ffi/ffi.dart';
 import 'package:ml_dsa/src/keccak.dart';
 import 'package:path/path.dart' as path;
 
-
 // ignore: camel_case_types
 class SHA3_512 {
   late DartSHA3_512 _digestFn;
@@ -18,7 +17,8 @@ class SHA3_512 {
         path.join(Directory.current.path, 'build', 'libkeccak$extension');
     final library = ffi.DynamicLibrary.open(libraryPath);
 
-    _digestFn = library.lookupFunction<NativeSHA3_512, DartSHA3_512>('SHA3_512');
+    _digestFn =
+        library.lookupFunction<NativeSHA3_512, DartSHA3_512>('SHA3_512');
   }
 
   Uint8List digest(Uint8List input) {
@@ -44,4 +44,3 @@ class SHA3_512 {
     return output;
   }
 }
-

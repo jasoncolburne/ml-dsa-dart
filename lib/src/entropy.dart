@@ -7,9 +7,11 @@ import 'sha3_512.dart';
 
 Uint8List rbg(int len) {
   final rnd = Random.secure();
-  final entropy = Uint8List.fromList(List.generate(32, (_) => rnd.nextInt(256)));
+  final entropy =
+      Uint8List.fromList(List.generate(32, (_) => rnd.nextInt(256)));
 
-  final HashDRBG drbg = HashDRBG(entropy, Uint8List.fromList([73, 0xde, 0xad, 0xbe, 0xef]));
+  final HashDRBG drbg =
+      HashDRBG(entropy, Uint8List.fromList([73, 0xde, 0xad, 0xbe, 0xef]));
   return drbg.generate(len * 8);
 }
 
@@ -25,7 +27,8 @@ class HashDRBG {
   HashDRBG(Uint8List entropy, Uint8List personalizationString) {
     _seedLength = 888;
 
-    final Uint8List seedMaterial = Uint8List(entropy.length + personalizationString.length);
+    final Uint8List seedMaterial =
+        Uint8List(entropy.length + personalizationString.length);
     seedMaterial.setRange(0, entropy.length, entropy);
     seedMaterial.setAll(entropy.length, personalizationString);
 
@@ -41,12 +44,15 @@ class HashDRBG {
   }
 
   BigInt _bytesToBigInt(Uint8List bytes) {
-    return BigInt.parse(bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join(), radix: 16);
+    return BigInt.parse(
+        bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join(),
+        radix: 16);
   }
 
   Uint8List _bigIntToBytes(BigInt number, int length) {
     String hexString = number.toRadixString(16).padLeft(length * 2, '0');
-    return Uint8List.fromList(List<int>.generate(length, (i) => int.parse(hexString.substring(i * 2, i * 2 + 2), radix: 16)));
+    return Uint8List.fromList(List<int>.generate(length,
+        (i) => int.parse(hexString.substring(i * 2, i * 2 + 2), radix: 16)));
   }
 
   Uint8List _derive(Uint8List input, int numberOfBits) {
@@ -62,7 +68,9 @@ class HashDRBG {
       final Uint8List dig = _sha3.digest(temp);
       final int digLength = dig.length;
 
-      final int bytesToWrite = digLength < numberOfBytes - offset ? digLength : numberOfBytes - offset;
+      final int bytesToWrite = digLength < numberOfBytes - offset
+          ? digLength
+          : numberOfBytes - offset;
       output.setRange(offset, offset + bytesToWrite, dig);
 
       offset += bytesToWrite;
@@ -84,7 +92,9 @@ class HashDRBG {
       _v = _sha3.digest(_v);
       final int digLength = _v.length;
 
-      final int bytesToWrite = digLength < numberOfBytes - offset ? digLength : numberOfBytes - offset;
+      final int bytesToWrite = digLength < numberOfBytes - offset
+          ? digLength
+          : numberOfBytes - offset;
       output.setRange(offset, offset + bytesToWrite, _v);
       offset += bytesToWrite;
     }
