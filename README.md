@@ -30,37 +30,22 @@ allow for repeated absorption and squeezing.
 
 ### Results
 
-```
-❯ git checkout main && dart pub get && dart compile exe test/ml_dsa_benchmark_test.dart -o benchmarks && ./benchmarks && git checkout performance && dart pub get && dart --enable-experiment=native-assets compile exe test/ml_dsa_benchmark_test.dart -o benchmarks && ./benchmarks
-Switched to branch 'main'
-Your branch is up to date with 'origin/main'.
-Resolving dependencies... 
-...
-Generated: /Users/jason/github.com/jasoncolburne/ml-dsa-dart/benchmarks
-44-Generate: 4970.750 µs/op 201.177 ops/s
-65-Generate: 8615.237 µs/op 116.073 ops/s
-87-Generate: 14143.603 µs/op 70.703 ops/s
-44-Sign: 11255.830 µs/op 88.843 ops/s
-65-Sign: 18764.463 µs/op 53.292 ops/s
-87-Sign: 24207.215 µs/op 41.310 ops/s
-44-Verify: 4513.760 µs/op 221.545 ops/s
-65-Verify: 7710.863 µs/op 129.687 ops/s
-87-Verify: 13434.475 µs/op 74.435 ops/s
-Switched to branch 'performance'
-Your branch is up to date with 'origin/performance'.
-Resolving dependencies... (1.0s)
-...
-Generated: /Users/jason/github.com/jasoncolburne/ml-dsa-dart/benchmarks
-44-Generate: 1407.086 µs/op 710.689 ops/s
-65-Generate: 2272.324 µs/op 440.078 ops/s
-87-Generate: 3552.133 µs/op 281.521 ops/s
-44-Sign: 3980.023 µs/op 251.255 ops/s
-65-Sign: 5805.945 µs/op 172.237 ops/s
-87-Sign: 7019.512 µs/op 142.460 ops/s
-44-Verify: 1081.094 µs/op 924.989 ops/s
-65-Verify: 1767.533 µs/op 565.760 ops/s
-87-Verify: 3126.011 µs/op 319.896 ops/s
-```
+**Key Generation:**
+ML-DSA-44: 3.53x faster (201 ops/s to 711 ops/s)
+ML-DSA-65: 3.79x faster (116 ops/s to 440 ops/s)
+ML-DSA-87: 3.98x faster (71 ops/s to 282 ops/s)
+
+**Signing:**
+ML-DSA-44: 2.83x faster (89 ops/s to 251 ops/s)
+ML-DSA-65: 3.23x faster (53 ops/s to 172 ops/s)
+ML-DSA-87: 3.45x faster (41 ops/s to 142 ops/s)
+
+**Verification:**
+ML-DSA-44: 4.17x faster (222 ops/s to 925 ops/s)
+ML-DSA-65: 4.36x faster (130 ops/s to 566 ops/s)
+ML-DSA-87: 4.30x faster (74 ops/s to 320 ops/s)
+
+_From Perplexity_: Overall, the performance improvements range from 2.83x to 4.36x faster across all ML-DSA variants. The most significant gains are observed in the verification process, with improvements becoming more pronounced for larger key sizes, particularly in key generation and signing operations.
 
 Tests were performed on an Apple M2 Max Macbook Pro (2023).
 
