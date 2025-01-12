@@ -1,4 +1,4 @@
-.PHONY: build test benchmark
+.PHONY: build test example
 
 build:
 	dart --enable-experiment=native-assets run build.dart
