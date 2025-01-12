@@ -26,6 +26,7 @@ void main(List<String> args) {
     compiler = 'cc';
     outputExtension = '.so';
     linkerArgs = [
+      '-shared',
       '-Wl,-undefined',
       '-Wl,dynamic_lookup',
     ];
