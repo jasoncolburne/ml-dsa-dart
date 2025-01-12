@@ -6,6 +6,9 @@ build:
 test: build
 	dart --enable-experiment=native-assets run test/ml_dsa_test.dart
 
+example: build
+	dart --enable-experiment=native-assets run example/ml_dsa_example.dart
+
 benchmark: build
 	dart --enable-experiment=native-assets compile exe test/ml_dsa_benchmark_test.dart -o benchmarks
 	@./benchmarks

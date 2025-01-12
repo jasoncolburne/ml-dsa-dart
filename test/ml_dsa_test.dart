@@ -40,7 +40,7 @@ bool testMKDSAKAT(ParameterSet params, List<Map<String, String>> katVectors) {
     final Uint8List sm = Uint8List(sig.length + message.length);
     sm.setRange(0, sig.length, sig);
     sm.setRange(sig.length, sm.length, message);
-    
+
     if (vector['Signature'] != HEX.encode(sm)) {
       print('bad sm (${sig.length}/${sm.length}):');
       print(HEX.encode(sm));
@@ -53,7 +53,12 @@ bool testMKDSAKAT(ParameterSet params, List<Map<String, String>> katVectors) {
   return true;
 }
 
-bool testMLDSARoundTrip(ParameterSet parameters, int skLen, int pkLen, int sigLen) {
+bool testMLDSARoundTrip(
+  ParameterSet parameters,
+  int skLen,
+  int pkLen,
+  int sigLen,
+) {
   final dsa = MLDSA(parameters);
 
   final message = utf8.encode("hello world");

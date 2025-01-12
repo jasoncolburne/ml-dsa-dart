@@ -8,11 +8,22 @@ void benchmarkMLDSAGenerate(MLDSA dsa) {
   dsa.keyGen();
 }
 
-void benchmarkMLDSASign(MLDSA dsa, Uint8List sk, Uint8List message, Uint8List ctx) {
+void benchmarkMLDSASign(
+  MLDSA dsa,
+  Uint8List sk,
+  Uint8List message,
+  Uint8List ctx,
+) {
   dsa.sign(sk, message, ctx);
 }
 
-void benchmarkMLDSAVerify(MLDSA dsa, Uint8List pk, Uint8List message, Uint8List sig, Uint8List ctx) {
+void benchmarkMLDSAVerify(
+  MLDSA dsa,
+  Uint8List pk,
+  Uint8List message,
+  Uint8List sig,
+  Uint8List ctx,
+) {
   dsa.verify(pk, message, sig, ctx);
 }
 
@@ -22,7 +33,7 @@ class MLDSABenchmark extends BenchmarkBase {
 
   @override
   void exercise() {
-    for (int i = 0; i < runsPerTrialLoop; i ++) {
+    for (int i = 0; i < runsPerTrialLoop; i++) {
       run();
     }
   }
@@ -31,12 +42,17 @@ class MLDSABenchmark extends BenchmarkBase {
   void report() {
     var microsecondsPerRun = measure() / runsPerTrialLoop;
     var operationsPerSecond = 1 / (microsecondsPerRun * 0.000001);
-    print('$name: ${microsecondsPerRun.toStringAsFixed(3)} µs/op ${operationsPerSecond.toStringAsFixed(3)} ops/s');
+    print(
+        '$name: ${microsecondsPerRun.toStringAsFixed(3)} µs/op ${operationsPerSecond.toStringAsFixed(3)} ops/s');
   }
 }
 
 class GenerateBenchmark extends MLDSABenchmark {
-  GenerateBenchmark(super.title, {required this.params, super.runsPerTrialLoop});
+  GenerateBenchmark(
+    super.title, {
+    required this.params,
+    super.runsPerTrialLoop,
+  });
 
   final ParameterSet params;
 
@@ -54,20 +70,23 @@ class GenerateBenchmark extends MLDSABenchmark {
 }
 
 class MLDSA44GenerateBenchmark extends GenerateBenchmark {
-  MLDSA44GenerateBenchmark() : super('44-Generate', params: MLDSA44Parameters());
+  MLDSA44GenerateBenchmark()
+      : super('44-Generate', params: MLDSA44Parameters());
 }
 
 class MLDSA65GenerateBenchmark extends GenerateBenchmark {
-  MLDSA65GenerateBenchmark() : super('65-Generate', params: MLDSA65Parameters());
+  MLDSA65GenerateBenchmark()
+      : super('65-Generate', params: MLDSA65Parameters());
 }
 
 class MLDSA87GenerateBenchmark extends GenerateBenchmark {
-  MLDSA87GenerateBenchmark() : super('87-Generate', params: MLDSA87Parameters());
+  MLDSA87GenerateBenchmark()
+      : super('87-Generate', params: MLDSA87Parameters());
 }
 
 class SignBenchmark extends MLDSABenchmark {
   SignBenchmark(super.title, {required this.params, super.runsPerTrialLoop});
-  
+
   final ParameterSet params;
 
   late MLDSA _dsa;
@@ -105,7 +124,7 @@ class MLDSA87SignBenchmark extends SignBenchmark {
 
 class VerifyBenchmark extends MLDSABenchmark {
   VerifyBenchmark(super.title, {required this.params, super.runsPerTrialLoop});
-  
+
   final ParameterSet params;
 
   late MLDSA _dsa;
