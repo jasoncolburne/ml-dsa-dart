@@ -17,14 +17,12 @@ class IncrementalSHAKE {
   late DartKeccak_HashSqueeze _squeezeFn;
 
   IncrementalSHAKE(this.bitLength) {
-    if (!Platform.isMacOS) {
-      throw UnsupportedError('untested platform');
-    }
+    final String extension = Platform.isMacOS ? '.dylib' : '.so';
 
     _shake = calloc<Keccak_HashInstance>(ffi.sizeOf<Keccak_HashInstance>());
 
     final libraryPath =
-        path.join(Directory.current.path, 'build', 'libkeccak.dylib');
+        path.join(Directory.current.path, 'build', 'libkeccak$extension');
     final library = ffi.DynamicLibrary.open(libraryPath);
 
     _initializeFn = library.lookupFunction<NativeKeccak_HashInitialize,
