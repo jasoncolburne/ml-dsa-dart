@@ -25,9 +25,9 @@ class SHA3_512 {
   Uint8List digest(Uint8List input) {
     Uint8List output = Uint8List(64);
 
-    final inputBuffer = calloc<ffi.Uint8>(input.length);
-    final outputBuffer = calloc<ffi.Uint8>(64);
-    final typedInputList = inputBuffer.asTypedList(input.length);
+    final ffi.Pointer<ffi.Uint8> inputBuffer = calloc<ffi.Uint8>(input.length);
+    final ffi.Pointer<ffi.Uint8> outputBuffer = calloc<ffi.Uint8>(64);
+    final Uint8List typedInputList = inputBuffer.asTypedList(input.length);
     typedInputList.setAll(0, input);
 
     try {
@@ -36,10 +36,11 @@ class SHA3_512 {
         throw Exception('failure calling sha3-512: $result');
       }
 
-      final typedOutputList = outputBuffer.asTypedList(64);
+      final Uint8List typedOutputList = outputBuffer.asTypedList(64);
       output.setAll(0, typedOutputList);
     } finally {
       calloc.free(inputBuffer);
+      calloc.free(outputBuffer);
     }
 
     return output;
