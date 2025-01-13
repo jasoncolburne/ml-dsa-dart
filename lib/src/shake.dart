@@ -21,9 +21,9 @@ class IncrementalSHAKE {
 
     _shake = calloc<Keccak_HashInstance>(ffi.sizeOf<Keccak_HashInstance>());
 
-    final libraryPath =
+    final String libraryPath =
         path.join(Directory.current.path, 'build', 'libkeccak$extension');
-    final library = ffi.DynamicLibrary.open(libraryPath);
+    final ffi.DynamicLibrary library = ffi.DynamicLibrary.open(libraryPath);
 
     _initializeFn = library.lookupFunction<NativeKeccak_HashInitialize,
         DartKeccak_HashInitialize>('Keccak_HashInitialize');
@@ -41,8 +41,8 @@ class IncrementalSHAKE {
   }
 
   void absorb(Uint8List input) {
-    final buffer = calloc<ffi.Uint8>(input.length);
-    final typedList = buffer.asTypedList(input.length);
+    final ffi.Pointer<ffi.Uint8> buffer = calloc<ffi.Uint8>(input.length);
+    final Uint8List typedList = buffer.asTypedList(input.length);
     typedList.setAll(0, input);
 
     try {
@@ -56,8 +56,8 @@ class IncrementalSHAKE {
   }
 
   Uint8List squeeze(int outputLength) {
-    Uint8List output = Uint8List(outputLength);
-    final buffer = calloc<ffi.Uint8>(outputLength);
+    final Uint8List output = Uint8List(outputLength);
+    final ffi.Pointer<ffi.Uint8> buffer = calloc<ffi.Uint8>(outputLength);
 
     try {
       final int result = _squeezeFn(_shake, buffer, outputLength * 8);
@@ -65,7 +65,7 @@ class IncrementalSHAKE {
         throw Exception('failure squeezing: $result');
       }
 
-      final typedList = buffer.asTypedList(outputLength);
+      final Uint8List typedList = buffer.asTypedList(outputLength);
       output.setAll(0, typedList);
     } finally {
       calloc.free(buffer);

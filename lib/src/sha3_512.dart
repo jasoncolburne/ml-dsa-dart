@@ -14,9 +14,9 @@ class SHA3_512 {
   SHA3_512() {
     final String extension = Platform.isMacOS ? '.dylib' : '.so';
 
-    final libraryPath =
+    final String libraryPath =
         path.join(Directory.current.path, 'build', 'libkeccak$extension');
-    final library = ffi.DynamicLibrary.open(libraryPath);
+    final ffi.DynamicLibrary library = ffi.DynamicLibrary.open(libraryPath);
 
     _digestFn =
         library.lookupFunction<NativeSHA3_512, DartSHA3_512>('SHA3_512');
