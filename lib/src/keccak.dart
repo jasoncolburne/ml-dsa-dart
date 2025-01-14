@@ -1,6 +1,8 @@
 // ignore_for_file: camel_case_types, constant_identifier_names
 
 import 'dart:ffi' as ffi;
+import 'dart:io' show Platform, Directory;
+import 'package:path/path.dart' as path;
 
 final class KeccakP1600_plain64_state extends ffi.Struct {
   @ffi.Array.multi([25])
@@ -86,3 +88,43 @@ typedef NativeSHA3_512 = ffi.Int Function(ffi.Pointer<ffi.Uint8> output,
     ffi.Pointer<ffi.Uint8> input, ffi.Size inputByteLen);
 typedef DartSHA3_512 = int Function(ffi.Pointer<ffi.Uint8> output,
     ffi.Pointer<ffi.Uint8> input, int inputByteLen);
+
+class KeccakLibrary {
+  static KeccakLibrary? _instance;
+  
+  late DartSHA3_512 sha3512Digest;
+  late DartKeccak_HashInitialize keccakHashInitialize;
+  late DartKeccak_HashUpdate keccakHashUpdate;
+  late DartKeccak_HashSqueeze keccakHashSqueeze;
+
+  KeccakLibrary._internal();
+
+  factory KeccakLibrary() {
+    if (_instance == null) {
+      _instance = KeccakLibrary._internal();
+
+
+      final String extension = Platform.isMacOS ? '.dylib' : '.so';
+
+      final String libraryPath =
+          path.join(Directory.current.path, 'build', 'libkeccak$extension');
+      final ffi.DynamicLibrary library = ffi.DynamicLibrary.open(libraryPath);
+
+      // SHA-3
+      _instance!.sha3512Digest =
+          library.lookupFunction<NativeSHA3_512, DartSHA3_512>('SHA3_512');
+
+      // Keccak (for SHAKE)
+      _instance!.keccakHashInitialize = library.lookupFunction<NativeKeccak_HashInitialize,
+          DartKeccak_HashInitialize>('Keccak_HashInitialize');
+      _instance!.keccakHashUpdate =
+          library.lookupFunction<NativeKeccak_HashUpdate, DartKeccak_HashUpdate>(
+              'Keccak_HashUpdate');
+      _instance!.keccakHashSqueeze = library.lookupFunction<NativeKeccak_HashSqueeze,
+          DartKeccak_HashSqueeze>('Keccak_HashSqueeze');
+
+    }
+
+    return _instance!;
+  }
+}
