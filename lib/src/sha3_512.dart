@@ -18,7 +18,8 @@ class SHA3_512 {
     typedInputList.setAll(0, input);
 
     try {
-      final int result = KeccakLibrary().sha3512Digest(outputBuffer, inputBuffer, input.length * 8);
+      final int result = KeccakLibrary()
+          .sha3512Digest(outputBuffer, inputBuffer, input.length * 8);
       if (result != 0) {
         throw Exception('failure calling sha3-512: $result');
       }

@@ -25,7 +25,8 @@ class IncrementalSHAKE {
     typedList.setAll(0, input);
 
     try {
-      final int result = KeccakLibrary().keccakHashUpdate(_shake, buffer, input.length * 8);
+      final int result =
+          KeccakLibrary().keccakHashUpdate(_shake, buffer, input.length * 8);
       if (result != HashReturn.KECCAK_SUCCESS.value) {
         throw Exception('failure absorbing: $result');
       }
@@ -39,7 +40,8 @@ class IncrementalSHAKE {
     final ffi.Pointer<ffi.Uint8> buffer = calloc<ffi.Uint8>(outputLength);
 
     try {
-      final int result = KeccakLibrary().keccakHashSqueeze(_shake, buffer, outputLength * 8);
+      final int result =
+          KeccakLibrary().keccakHashSqueeze(_shake, buffer, outputLength * 8);
       if (result != HashReturn.KECCAK_SUCCESS.value) {
         throw Exception('failure squeezing: $result');
       }

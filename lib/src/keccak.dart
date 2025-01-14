@@ -91,7 +91,7 @@ typedef DartSHA3_512 = int Function(ffi.Pointer<ffi.Uint8> output,
 
 class KeccakLibrary {
   static KeccakLibrary? _instance;
-  
+
   late DartSHA3_512 sha3512Digest;
   late DartKeccak_HashInitialize keccakHashInitialize;
   late DartKeccak_HashUpdate keccakHashUpdate;
@@ -102,7 +102,6 @@ class KeccakLibrary {
   factory KeccakLibrary() {
     if (_instance == null) {
       _instance = KeccakLibrary._internal();
-
 
       final String extension = Platform.isMacOS ? '.dylib' : '.so';
 
@@ -115,14 +114,14 @@ class KeccakLibrary {
           library.lookupFunction<NativeSHA3_512, DartSHA3_512>('SHA3_512');
 
       // Keccak (for SHAKE)
-      _instance!.keccakHashInitialize = library.lookupFunction<NativeKeccak_HashInitialize,
+      _instance!.keccakHashInitialize = library.lookupFunction<
+          NativeKeccak_HashInitialize,
           DartKeccak_HashInitialize>('Keccak_HashInitialize');
-      _instance!.keccakHashUpdate =
-          library.lookupFunction<NativeKeccak_HashUpdate, DartKeccak_HashUpdate>(
-              'Keccak_HashUpdate');
-      _instance!.keccakHashSqueeze = library.lookupFunction<NativeKeccak_HashSqueeze,
+      _instance!.keccakHashUpdate = library.lookupFunction<
+          NativeKeccak_HashUpdate, DartKeccak_HashUpdate>('Keccak_HashUpdate');
+      _instance!.keccakHashSqueeze = library.lookupFunction<
+          NativeKeccak_HashSqueeze,
           DartKeccak_HashSqueeze>('Keccak_HashSqueeze');
-
     }
 
     return _instance!;
