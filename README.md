@@ -49,6 +49,21 @@ _From Perplexity_: Overall, the performance improvements range from 2.83x to 4.3
 
 Tests were performed on an Apple M2 Max Macbook Pro (2023).
 
+After tuning I realized I was loading the C Keccak code on every call. Whoops. Here are even better
+numbers:
+
+```
+44-Generate: 1043.503 µs/op 958.310 ops/s
+65-Generate: 1611.874 µs/op 620.396 ops/s
+87-Generate: 2315.601 µs/op 431.853 ops/s
+44-Sign: 3413.495 µs/op 292.955 ops/s
+65-Sign: 5109.833 µs/op 195.701 ops/s
+87-Sign: 6274.445 µs/op 159.377 ops/s
+44-Verify: 750.691 µs/op 1332.105 ops/s
+65-Verify: 1243.647 µs/op 804.087 ops/s
+87-Verify: 2070.191 µs/op 483.047 ops/s
+```
+
 ## TODO
 
 - [x] Proper DRBG (? - I didn't really audit what I did)
